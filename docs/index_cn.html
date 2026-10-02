@@ -7,18 +7,18 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap">
 <style>
 :root {
-  --bg: #0a0e14;
-  --bg-card: #12171f;
-  --bg-code: #0d1117;
-  --border: #1e2734;
-  --text: #e2e8f0;
-  --text-dim: #8892a4;
-  --accent: #00d4aa;
-  --accent-glow: rgba(0,212,170,0.15);
-  --amber: #f0a030;
-  --blue: #58a6ff;
-  --red: #f85149;
-  --purple: #bc8cff;
+  --bg: #f8f9fb;
+  --bg-card: #ffffff;
+  --bg-code: #f0f2f5;
+  --border: #d8dce3;
+  --text: #1a1d23;
+  --text-dim: #5a6270;
+  --accent: #00875a;
+  --accent-glow: rgba(0,135,90,0.08);
+  --amber: #b35900;
+  --blue: #0969da;
+  --red: #cf222e;
+  --purple: #8250df;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -31,7 +31,7 @@ body {
 .hero {
   padding: 5rem 1.5rem 4rem;
   text-align: center;
-  background: radial-gradient(ellipse at 50% 0%, rgba(0,212,170,0.08) 0%, transparent 60%);
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,135,90,0.06) 0%, transparent 60%);
 }
 .hero h1 {
   font-size: clamp(2.2rem, 5vw, 3.5rem);
@@ -71,7 +71,7 @@ body {
   gap: 0.5rem;
   padding: 0.7rem 1.8rem;
   background: var(--accent);
-  color: var(--bg);
+  color: #ffffff;
   text-decoration: none;
   border-radius: 8px;
   font-weight: 600;
@@ -108,7 +108,7 @@ section h2 span { color: var(--accent); }
   border: 1px solid var(--border);
   overflow: hidden;
   margin: 2rem 0;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
 }
 .screenshot img { width: 100%; display: block; }
 .screenshot-caption {
@@ -221,41 +221,41 @@ footer a { color: var(--accent); text-decoration: none; }
   <div class="arch-diagram">
     <svg viewBox="0 0 780 240" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L10,5 L0,9" fill="none" stroke="#e2e8f0" stroke-width="1.5"/></marker>
-        <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L10,5 L0,9" fill="none" stroke="#00d4aa" stroke-width="1.5"/></marker>
+        <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L10,5 L0,9" fill="none" stroke="#1a1d23" stroke-width="1.5"/></marker>
+        <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L10,5 L0,9" fill="none" stroke="#00875a" stroke-width="1.5"/></marker>
       </defs>
-      <rect x="10" y="80" width="100" height="80" rx="10" fill="#12171f" stroke="#1e2734" stroke-width="1.5"/>
-      <text x="60" y="112" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="10" font-weight="600" letter-spacing="0.05em">用户</text>
-      <text x="60" y="130" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="11">设置目标</text>
-      <text x="60" y="146" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="11">符号化输入</text>
-      <line x1="115" y1="120" x2="155" y2="120" stroke="#e2e8f0" stroke-width="1.5" marker-end="url(#a)"/>
-      <rect x="160" y="60" width="140" height="120" rx="10" fill="#12171f" stroke="#00d4aa" stroke-opacity="0.4" stroke-width="1.5"/>
-      <text x="230" y="85" text-anchor="middle" fill="#00d4aa" font-family="Inter,sans-serif" font-size="11" font-weight="700">Ghidra 插件</text>
-      <text x="230" y="105" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="10">Java</text>
-      <text x="230" y="125" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">4 标签页面板</text>
-      <text x="230" y="140" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">8 个菜单操作</text>
-      <text x="230" y="155" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">会话保存/恢复</text>
-      <line x1="305" y1="120" x2="355" y2="120" stroke="#e2e8f0" stroke-width="1.5" marker-end="url(#a)"/>
-      <text x="330" y="110" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono,monospace" font-size="9">JSON/TCP</text>
-      <text x="330" y="137" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono,monospace" font-size="9">:13370</text>
-      <rect x="360" y="40" width="160" height="160" rx="10" fill="#12171f" stroke="#f0a030" stroke-opacity="0.4" stroke-width="1.5"/>
-      <text x="440" y="65" text-anchor="middle" fill="#f0a030" font-family="Inter,sans-serif" font-size="11" font-weight="700">angr 引擎</text>
-      <text x="440" y="82" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="10">Python</text>
-      <text x="440" y="105" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">符号执行</text>
-      <text x="440" y="120" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">路径分叉</text>
-      <text x="440" y="135" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">约束收集</text>
-      <text x="440" y="155" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="9">+ Veritesting</text>
-      <text x="440" y="170" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="9">+ Unicorn (可选)</text>
-      <line x1="525" y1="120" x2="575" y2="120" stroke="#e2e8f0" stroke-width="1.5" marker-end="url(#a)"/>
-      <text x="550" y="110" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono,monospace" font-size="9">约束条件</text>
-      <rect x="580" y="70" width="120" height="100" rx="10" fill="#12171f" stroke="#58a6ff" stroke-opacity="0.4" stroke-width="1.5"/>
-      <text x="640" y="98" text-anchor="middle" fill="#58a6ff" font-family="Inter,sans-serif" font-size="11" font-weight="700">Z3 求解器</text>
-      <text x="640" y="118" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">SAT + 理论求解</text>
-      <text x="640" y="133" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">CDCL 引擎</text>
-      <text x="640" y="148" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="10">位向量、数组理论</text>
-      <line x1="640" y1="175" x2="640" y2="210" stroke="#00d4aa" stroke-width="2" marker-end="url(#ag)"/>
-      <rect x="580" y="210" width="120" height="30" rx="6" fill="#00d4aa" fill-opacity="0.12" stroke="#00d4aa" stroke-opacity="0.5"/>
-      <text x="640" y="230" text-anchor="middle" fill="#00d4aa" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700">P4Rg</text>
+      <rect x="10" y="80" width="100" height="80" rx="10" fill="#ffffff" stroke="#d8dce3" stroke-width="1.5"/>
+      <text x="60" y="112" text-anchor="middle" fill="#5a6270" font-family="Inter,sans-serif" font-size="10" font-weight="600" letter-spacing="0.05em">用户</text>
+      <text x="60" y="130" text-anchor="middle" fill="#1a1d23" font-family="Inter,sans-serif" font-size="11">设置目标</text>
+      <text x="60" y="146" text-anchor="middle" fill="#1a1d23" font-family="Inter,sans-serif" font-size="11">符号化输入</text>
+      <line x1="115" y1="120" x2="155" y2="120" stroke="#1a1d23" stroke-width="1.5" marker-end="url(#a)"/>
+      <rect x="160" y="60" width="140" height="120" rx="10" fill="#ffffff" stroke="#00875a" stroke-opacity="0.4" stroke-width="1.5"/>
+      <text x="230" y="85" text-anchor="middle" fill="#00875a" font-family="Inter,sans-serif" font-size="11" font-weight="700">Ghidra 插件</text>
+      <text x="230" y="105" text-anchor="middle" fill="#5a6270" font-family="Inter,sans-serif" font-size="10">Java</text>
+      <text x="230" y="125" text-anchor="middle" fill="#1a1d23" font-family="Inter,sans-serif" font-size="10">4 标签页面板</text>
+      <text x="230" y="140" text-anchor="middle" fill="#1a1d23" font-family="Inter,sans-serif" font-size="10">8 个菜单操作</text>
+      <text x="230" y="155" text-anchor="middle" fill="#1a1d23" font-family="Inter,sans-serif" font-size="10">会话保存/恢复</text>
+      <line x1="305" y1="120" x2="355" y2="120" stroke="#1a1d23" stroke-width="1.5" marker-end="url(#a)"/>
+      <text x="330" y="110" text-anchor="middle" fill="#5a6270" font-family="JetBrains Mono,monospace" font-size="9">JSON/TCP</text>
+      <text x="330" y="137" text-anchor="middle" fill="#5a6270" font-family="JetBrains Mono,monospace" font-size="9">:13370</text>
+      <rect x="360" y="40" width="160" height="160" rx="10" fill="#ffffff" stroke="#b35900" stroke-opacity="0.4" stroke-width="1.5"/>
+      <text x="440" y="65" text-anchor="middle" fill="#b35900" font-family="Inter,sans-serif" font-size="11" font-weight="700">angr 引擎</text>
+      <text x="440" y="82" text-anchor="middle" fill="#5a6270" font-family="Inter,sans-serif" font-size="10">Python</text>
+      <text x="440" y="105" text-anchor="middle" fill="#1a1d23" font-family="Inter,sans-serif" font-size="10">符号执行</text>
+      <text x="440" y="120" text-anchor="middle" fill="#1a1d23" font-family="Inter,sans-serif" font-size="10">路径分叉</text>
+      <text x="440" y="135" text-anchor="middle" fill="#1a1d23" font-family="Inter,sans-serif" font-size="10">约束收集</text>
+      <text x="440" y="155" text-anchor="middle" fill="#5a6270" font-family="Inter,sans-serif" font-size="9">+ Veritesting</text>
+      <text x="440" y="170" text-anchor="middle" fill="#5a6270" font-family="Inter,sans-serif" font-size="9">+ Unicorn (可选)</text>
+      <line x1="525" y1="120" x2="575" y2="120" stroke="#1a1d23" stroke-width="1.5" marker-end="url(#a)"/>
+      <text x="550" y="110" text-anchor="middle" fill="#5a6270" font-family="JetBrains Mono,monospace" font-size="9">约束条件</text>
+      <rect x="580" y="70" width="120" height="100" rx="10" fill="#ffffff" stroke="#0969da" stroke-opacity="0.4" stroke-width="1.5"/>
+      <text x="640" y="98" text-anchor="middle" fill="#0969da" font-family="Inter,sans-serif" font-size="11" font-weight="700">Z3 求解器</text>
+      <text x="640" y="118" text-anchor="middle" fill="#1a1d23" font-family="Inter,sans-serif" font-size="10">SAT + 理论求解</text>
+      <text x="640" y="133" text-anchor="middle" fill="#1a1d23" font-family="Inter,sans-serif" font-size="10">CDCL 引擎</text>
+      <text x="640" y="148" text-anchor="middle" fill="#5a6270" font-family="Inter,sans-serif" font-size="10">位向量、数组理论</text>
+      <line x1="640" y1="175" x2="640" y2="210" stroke="#00875a" stroke-width="2" marker-end="url(#ag)"/>
+      <rect x="580" y="210" width="120" height="30" rx="6" fill="#00875a" fill-opacity="0.12" stroke="#00875a" stroke-opacity="0.5"/>
+      <text x="640" y="230" text-anchor="middle" fill="#00875a" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700">P4Rg</text>
     </svg>
   </div>
 
