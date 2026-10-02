@@ -1,0 +1,43 @@
+README.md
+  744b688fc115f280 1-157
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "58db19bfbc6ff200a09809692cedd75ec8a1bc08",
+  "prompts": {
+    "744b688fc115f280": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e2ad7fcf-a277-491a-9237-f2b42081ac4d",
+        "model": "deepseek-flash"
+      },
+      "human_author": "nongjiawu",
+      "messages": [],
+      "total_additions": 756,
+      "total_deletions": 5,
+      "accepted_lines": 756,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "README.md": {
+          "additions": 157,
+          "accepted_lines": 157
+        },
+        "src/main/java/ponce4ghidra/engine/EngineManager.java": {
+          "additions": 13,
+          "deletions": 2,
+          "accepted_lines": 13
+        },
+        "python/ponce4ghidra_engine/server.py": {
+          "additions": 21,
+          "deletions": 3,
+          "accepted_lines": 21
+        },
+        "python/ponce4ghidra_engine/engine_triton.py": {
+          "additions": 565,
+          "accepted_lines": 565
+        }
+      }
+    }
+  }
+}
