@@ -28,6 +28,15 @@ public class EngineManager {
 	private BufferedReader reader;
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 	private volatile boolean running;
+	private String engineBackend = "angr";
+
+	public void setEngineBackend(String backend) {
+		this.engineBackend = backend;
+	}
+
+	public String getEngineBackend() {
+		return engineBackend;
+	}
 
 	public void start() throws IOException {
 		if (running) {
@@ -37,7 +46,9 @@ public class EngineManager {
 		String pythonPath = findPython();
 		String serverModule = findServerModule();
 
-		ProcessBuilder pb = new ProcessBuilder(pythonPath, "-m", "ponce4ghidra_engine.server");
+		ProcessBuilder pb = new ProcessBuilder(
+			pythonPath, "-m", "ponce4ghidra_engine.server",
+			"--engine", engineBackend);
 		pb.environment().put("PYTHONPATH", serverModule);
 		pb.redirectErrorStream(true);
 		pythonProcess = pb.start();
@@ -45,7 +56,7 @@ public class EngineManager {
 		startLogReader(pythonProcess.getInputStream());
 		connectWithRetry();
 		running = true;
-		Msg.info(this, "Ponce4Ghidra engine started on port " + PORT);
+		Msg.info(this, "Ponce4Ghidra engine started (" + engineBackend + ") on port " + PORT);
 	}
 
 	public void stop() {

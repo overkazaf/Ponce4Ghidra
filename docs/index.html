@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ponce4Ghidra — Interactive Symbolic Execution for Ghidra</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root {
+  --bg: #0a0e14;
+  --bg-card: #12171f;
+  --bg-code: #0d1117;
+  --border: #1e2734;
+  --text: #e2e8f0;
+  --text-dim: #8892a4;
+  --accent: #00d4aa;
+  --accent-glow: rgba(0,212,170,0.15);
+  --amber: #f0a030;
+  --blue: #58a6ff;
+  --red: #f85149;
+  --purple: #bc8cff;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, sans-serif;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hero */
+.hero {
+  padding: 5rem 1.5rem 4rem;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,212,170,0.08) 0%, transparent 60%);
+}
+.hero h1 {
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin-bottom: 0.5rem;
+}
+.hero h1 span { color: var(--accent); }
+.hero .tagline {
+  font-size: 1.15rem;
+  color: var(--text-dim);
+  max-width: 600px;
+  margin: 0 auto 2rem;
+}
+.hero-badges {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 2.5rem;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+}
+.badge .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.8rem;
+  background: var(--accent);
+  color: var(--bg);
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: opacity 0.2s;
+}
+.hero-cta:hover { opacity: 0.85; }
+
+/* Container */
+.container { max-width: 960px; margin: 0 auto; padding: 0 1.5rem; }
+
+/* Sections */
+section { padding: 4rem 0; }
+section h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 1.5rem;
+  text-wrap: balance;
+}
+section h2 span { color: var(--accent); }
+
+/* Demo code block */
+.demo-block {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem 2rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.88rem;
+  line-height: 1.8;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+.demo-block .step { color: var(--text-dim); }
+.demo-block .cmd { color: var(--accent); }
+.demo-block .result { color: var(--amber); font-weight: 600; }
+
+/* Screenshot */
+.screenshot {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin: 2rem 0;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.screenshot img {
+  width: 100%;
+  display: block;
+}
+.screenshot-caption {
+  padding: 0.6rem 1rem;
+  background: var(--bg-card);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+
+/* Architecture SVG */
+.arch-diagram {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 2rem;
+  margin: 2rem 0;
+  overflow-x: auto;
+}
+.arch-diagram svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+
+/* Feature grid */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+.feature {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.3rem 1.5rem;
+}
+.feature-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+.feature h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.3rem; }
+.feature p { color: var(--text-dim); font-size: 0.9rem; line-height: 1.5; }
+
+/* Workflow steps */
+.workflow {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 2rem 0;
+}
+.wf-step {
+  display: flex;
+  gap: 1.2rem;
+  position: relative;
+  padding-bottom: 1.5rem;
+}
+.wf-step:last-child { padding-bottom: 0; }
+.wf-line {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 40px;
+  flex-shrink: 0;
+}
+.wf-num {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--accent-glow);
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  font-family: 'JetBrains Mono', monospace;
+  z-index: 1;
+}
+.wf-line::after {
+  content: '';
+  position: absolute;
+  top: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  bottom: 0;
+  background: var(--border);
+}
+.wf-step:last-child .wf-line::after { display: none; }
+.wf-body { flex: 1; padding-top: 0.3rem; }
+.wf-body strong { color: var(--accent); }
+.wf-body code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  background: var(--bg-code);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+.wf-body .dim { color: var(--text-dim); }
+
+/* Comparison table */
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+.compare-table th {
+  text-align: left;
+  padding: 0.7rem 1rem;
+  border-bottom: 2px solid var(--border);
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+.compare-table td {
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-table .method { color: var(--accent); font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+
+/* Papers */
+.paper {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 0.6rem;
+}
+.paper strong { display: block; margin-bottom: 0.2rem; }
+.paper span { color: var(--text-dim); font-size: 0.88rem; }
+
+/* Install code */
+.install-block {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.2rem 1.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+.install-block .comment { color: var(--text-dim); }
+.install-block .cmd { color: var(--accent); }
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 2rem 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.88rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ HERO ═══════════ -->
+<div class="hero">
+  <h1><span>Ponce4Ghidra</span></h1>
+  <p class="tagline">Interactive symbolic execution for Ghidra. Right-click, symbolize, solve — the plugin finds the password, the license key, the flag.</p>
+  <div class="hero-badges">
+    <span class="badge"><span class="dot" style="background:var(--accent)"></span> angr + Z3</span>
+    <span class="badge"><span class="dot" style="background:var(--blue)"></span> Ghidra 11.4+</span>
+    <span class="badge"><span class="dot" style="background:var(--amber)"></span> ELF / Mach-O / .so</span>
+    <span class="badge"><span class="dot" style="background:var(--purple)"></span> Veritesting + Unicorn</span>
+  </div>
+  <a href="https://github.com/overkazaf/Ponce4Ghidra" class="hero-cta">View on GitHub &rarr;</a>
+</div>
+
+<div class="container">
+
+<!-- ═══════════ DEMO ═══════════ -->
+<section>
+  <h2>5 Steps to <span>Crack a Password</span></h2>
+  <div class="demo-block">
+    <div><span class="step">1.</span> Open <span class="cmd">test_crackme</span> in Ghidra</div>
+    <div><span class="step">2.</span> Right-click <span class="cmd">0x1000004d7</span> (return 1) &rarr; Set as Find Target</div>
+    <div><span class="step">3.</span> Right-click <span class="cmd">0x100000484</span> (return 0) &rarr; Set as Avoid</div>
+    <div><span class="step">4.</span> Ponce4Ghidra &rarr; Symbolize argv[1] (size: <span class="cmd">4</span>)</div>
+    <div><span class="step">5.</span> Solve Constraints &rarr; <span class="result">argv1 = P4Rg</span></div>
+  </div>
+
+  <div class="screenshot">
+    <img src="img/constraints-tab.png" alt="Ponce4Ghidra Constraints tab showing solved constraints for test_crackme" loading="lazy">
+    <div class="screenshot-caption">Constraints tab: Z3's solution path — each constraint maps to a byte of the password P4Rg</div>
+  </div>
+</section>
+
+<!-- ═══════════ ARCHITECTURE ═══════════ -->
+<section>
+  <h2>How It <span>Works</span></h2>
+  <p style="color:var(--text-dim);max-width:65ch;margin-bottom:1rem">Not brute force, not fuzzing — <strong style="color:var(--text)">equation solving</strong>. A 16-byte input has 2<sup>128</sup> possibilities. The constraints reduce it to a system Z3 solves in seconds.</p>
+
+  <div class="arch-diagram">
+    <svg viewBox="0 0 780 240" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L10,5 L0,9" fill="none" stroke="#e2e8f0" stroke-width="1.5"/></marker>
+        <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L10,5 L0,9" fill="none" stroke="#00d4aa" stroke-width="1.5"/></marker>
+      </defs>
+
+      <!-- User -->
+      <rect x="10" y="80" width="100" height="80" rx="10" fill="#12171f" stroke="#1e2734" stroke-width="1.5"/>
+      <text x="60" y="112" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="10" font-weight="600" letter-spacing="0.05em">YOU</text>
+      <text x="60" y="130" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="11">Set Find/Avoid</text>
+      <text x="60" y="146" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="11">Symbolize</text>
+
+      <!-- Arrow -->
+      <line x1="115" y1="120" x2="155" y2="120" stroke="#e2e8f0" stroke-width="1.5" marker-end="url(#a)"/>
+
+      <!-- Ghidra Plugin -->
+      <rect x="160" y="60" width="140" height="120" rx="10" fill="#12171f" stroke="#00d4aa" stroke-opacity="0.4" stroke-width="1.5"/>
+      <text x="230" y="85" text-anchor="middle" fill="#00d4aa" font-family="Inter,sans-serif" font-size="11" font-weight="700">Ghidra Plugin</text>
+      <text x="230" y="105" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="10">Java</text>
+      <text x="230" y="125" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">4-tab panel</text>
+      <text x="230" y="140" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">8 menu actions</text>
+      <text x="230" y="155" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">Session save/restore</text>
+
+      <!-- Arrow -->
+      <line x1="305" y1="120" x2="355" y2="120" stroke="#e2e8f0" stroke-width="1.5" marker-end="url(#a)"/>
+      <text x="330" y="110" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono,monospace" font-size="9">JSON/TCP</text>
+      <text x="330" y="137" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono,monospace" font-size="9">:13370</text>
+
+      <!-- angr Engine -->
+      <rect x="360" y="40" width="160" height="160" rx="10" fill="#12171f" stroke="#f0a030" stroke-opacity="0.4" stroke-width="1.5"/>
+      <text x="440" y="65" text-anchor="middle" fill="#f0a030" font-family="Inter,sans-serif" font-size="11" font-weight="700">angr Engine</text>
+      <text x="440" y="82" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="10">Python</text>
+      <text x="440" y="105" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">Symbolic execution</text>
+      <text x="440" y="120" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">Path forking</text>
+      <text x="440" y="135" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">Constraint collection</text>
+      <text x="440" y="155" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="9">+ Veritesting</text>
+      <text x="440" y="170" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="9">+ Unicorn (optional)</text>
+
+      <!-- Arrow -->
+      <line x1="525" y1="120" x2="575" y2="120" stroke="#e2e8f0" stroke-width="1.5" marker-end="url(#a)"/>
+      <text x="550" y="110" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono,monospace" font-size="9">constraints</text>
+
+      <!-- Z3 -->
+      <rect x="580" y="70" width="120" height="100" rx="10" fill="#12171f" stroke="#58a6ff" stroke-opacity="0.4" stroke-width="1.5"/>
+      <text x="640" y="98" text-anchor="middle" fill="#58a6ff" font-family="Inter,sans-serif" font-size="11" font-weight="700">Z3 Solver</text>
+      <text x="640" y="118" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">SAT + Theories</text>
+      <text x="640" y="133" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">CDCL engine</text>
+      <text x="640" y="148" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="10">bit-vector, array</text>
+
+      <!-- Result arrow -->
+      <line x1="640" y1="175" x2="640" y2="210" stroke="#00d4aa" stroke-width="2" marker-end="url(#ag)"/>
+      <rect x="580" y="210" width="120" height="30" rx="6" fill="#00d4aa" fill-opacity="0.12" stroke="#00d4aa" stroke-opacity="0.5"/>
+      <text x="640" y="230" text-anchor="middle" fill="#00d4aa" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700">P4Rg</text>
+    </svg>
+  </div>
+
+  <div class="workflow">
+    <div class="wf-step">
+      <div class="wf-line"><div class="wf-num">1</div></div>
+      <div class="wf-body"><strong>Symbolize</strong> — replace the input with a math variable<br><span class="dim">argv[1] becomes a 4-byte unknown: <code>BVS("argv1", 32)</code></span></div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-line"><div class="wf-num">2</div></div>
+      <div class="wf-body"><strong>Fork</strong> — at each branch on the symbolic input, explore both sides<br><span class="dim"><code>if (input[0] == 'P')</code> → fork: one path adds constraint <code>byte0 == 0x50</code>, the other <code>byte0 != 0x50</code></span></div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-line"><div class="wf-num">3</div></div>
+      <div class="wf-body"><strong>Collect</strong> — each path accumulates constraints as it runs<br><span class="dim">Found path: <code>byte0==0x50 ∧ byte1==0x34 ∧ byte2^0x42==0x10 ∧ byte3+0x20==0x87</code></span></div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-line"><div class="wf-num">4</div></div>
+      <div class="wf-body"><strong>Solve</strong> — send all constraints to Z3<br><span class="dim">Z3's CDCL engine solves the system in milliseconds → <code>P4Rg</code></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ FEATURES ═══════════ -->
+<section>
+  <h2><span>Features</span></h2>
+  <div class="features">
+    <div class="feature">
+      <div class="feature-icon" style="background:var(--accent-glow);color:var(--accent)">Σ</div>
+      <h3>Multi-Solution Solver</h3>
+      <p>Find up to 5 alternative solutions per variable. A password may have multiple valid inputs.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:rgba(240,160,48,0.12);color:var(--amber)">C</div>
+      <h3>Constraint Visualization</h3>
+      <p>See every constraint the solver collected. Understand why a path is reachable — not just that it is.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:rgba(88,166,255,0.12);color:var(--blue)">V</div>
+      <h3>Veritesting</h3>
+      <p>Smart path merging at loop boundaries. Large binaries don't path-explode.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:rgba(188,140,255,0.12);color:var(--purple)">U</div>
+      <h3>Unicorn Engine</h3>
+      <p>Concrete blocks execute via Unicorn (fast), symbolic only at branches touching symbolic data.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:var(--accent-glow);color:var(--accent)">↻</div>
+      <h3>Session Persistence</h3>
+      <p>Save/Restore sessions across Ghidra restarts. Your Find/Avoid targets and symbolization commands survive.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:rgba(248,81,73,0.12);color:var(--red)">⚡</div>
+      <h3>Live Progress</h3>
+      <p>Status bar updates every second during exploration: active paths, found count, step number, elapsed time.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ SYMBOLIZE GUIDE ═══════════ -->
+<section>
+  <h2>When to Use <span>Which Symbolize</span></h2>
+  <div style="overflow-x:auto">
+  <table class="compare-table">
+    <tr><th>Method</th><th>Use when</th><th>Speed</th></tr>
+    <tr>
+      <td class="method">Function Argument</td>
+      <td>You know which function checks the input. Analyzing a .so library. Binary is large.</td>
+      <td style="color:var(--accent)">Fast</td>
+    </tr>
+    <tr>
+      <td class="method">argv[N]</td>
+      <td>Program reads input from command line. Binary is small/simple. Need whole-program context.</td>
+      <td style="color:var(--amber)">Medium</td>
+    </tr>
+    <tr>
+      <td class="method">Register</td>
+      <td>The unknown is a scalar (int/long), not a buffer.</td>
+      <td style="color:var(--accent)">Fast</td>
+    </tr>
+    <tr>
+      <td class="method">Memory</td>
+      <td>The unknown is at a known fixed memory address (global variable, struct field).</td>
+      <td style="color:var(--accent)">Fast</td>
+    </tr>
+  </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.9rem;margin-top:0.5rem"><strong style="color:var(--text)">Rule of thumb</strong>: start with Function Argument. Use argv only when you need the entire program's execution context.</p>
+</section>
+
+<!-- ═══════════ PLATFORMS ═══════════ -->
+<section>
+  <h2>Platform <span>Support</span></h2>
+  <div style="overflow-x:auto">
+  <table class="compare-table">
+    <tr><th>Format</th><th>Architectures</th><th>Status</th></tr>
+    <tr><td>Mach-O</td><td>x86_64</td><td style="color:var(--accent)">Fully tested</td></tr>
+    <tr><td>ELF</td><td>x86_64, ARM64, ARM32, MIPS</td><td style="color:var(--accent)">Tested (static binaries)</td></tr>
+    <tr><td>Android .so</td><td>ARM64, ARM32</td><td style="color:var(--amber)">Supported (deferred state)</td></tr>
+  </table>
+  </div>
+</section>
+
+<!-- ═══════════ INSTALL ═══════════ -->
+<section>
+  <h2><span>Installation</span></h2>
+  <div class="install-block">
+<span class="comment"># 1. Python environment</span>
+python3 -m venv .venv
+source .venv/bin/activate
+<span class="cmd">pip install angr</span>
+pip install unicorn  <span class="comment"># optional: fast concrete execution</span>
+
+<span class="comment"># 2. Build the Ghidra extension</span>
+export GHIDRA_INSTALL_DIR=/path/to/ghidra
+<span class="cmd">gradle buildExtension</span>
+
+<span class="comment"># 3. Install in Ghidra</span>
+<span class="comment"># File → Install Extensions → Add → dist/*.zip</span>
+  </div>
+</section>
+
+<!-- ═══════════ REFERENCES ═══════════ -->
+<section>
+  <h2>Key <span>Papers</span></h2>
+  <div class="paper"><strong>Z3: An Efficient SMT Solver</strong><span>de Moura, Bjørner (2008, TACAS) — The solver behind Ponce4Ghidra</span></div>
+  <div class="paper"><strong>angr: (State of) The Art of War</strong><span>Shoshitaishvili et al. (2016, IEEE S&P) — The symbolic execution framework</span></div>
+  <div class="paper"><strong>GRASP: Conflict-Driven Clause Learning</strong><span>Marques-Silva, Sakallah (1996, ICCAD) — The algorithm that makes SAT solving practical</span></div>
+  <div class="paper"><strong>KLEE: Automatic Test Generation</strong><span>Cadar, Dunbar, Engler (2008, OSDI) — Source-level symbolic execution milestone</span></div>
+</section>
+
+</div>
+
+<footer>
+  <div class="container">
+    <p><strong>Ponce4Ghidra</strong> — MIT License</p>
+    <p style="margin-top:0.3rem"><a href="https://github.com/overkazaf/Ponce4Ghidra">GitHub</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

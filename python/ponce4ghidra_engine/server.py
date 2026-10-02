@@ -7,6 +7,7 @@ import threading
 import traceback
 
 from .engine import SymbolicEngine
+from .engine_triton import TRITON_AVAILABLE, TritonEngine
 from .protocol import Command, parse_command, ok, error, progress
 
 HOST = "127.0.0.1"
@@ -47,7 +48,7 @@ HANDLERS = {
 }
 
 
-def handle_client(conn: socket.socket, engine: SymbolicEngine):
+def handle_client(conn: socket.socket, engine):
     with conn.makefile("r", encoding="utf-8") as reader, \
          conn.makefile("w", encoding="utf-8") as writer:
         for line in reader:
@@ -85,17 +86,34 @@ def handle_client(conn: socket.socket, engine: SymbolicEngine):
             writer.flush()
 
 
+def _create_engine(name: str):
+    if name == "triton":
+        if not TRITON_AVAILABLE:
+            logger.warning(
+                "Triton backend requested but not installed. "
+                "Install with: pip install triton-library lief. "
+                "Falling back to angr."
+            )
+            return SymbolicEngine()
+        logger.info("Using Triton concolic execution backend")
+        return TritonEngine()
+    logger.info("Using angr symbolic execution backend")
+    return SymbolicEngine()
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Ponce4Ghidra angr engine")
+    parser = argparse.ArgumentParser(description="Ponce4Ghidra symbolic execution engine")
     parser.add_argument("--port", type=int, default=PORT)
     parser.add_argument("--host", default=HOST)
+    parser.add_argument("--engine", choices=["angr", "triton"], default="angr",
+                        help="Execution backend (default: angr)")
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args()
 
     if args.verbose:
         logging.getLogger("ponce4ghidra").setLevel(logging.DEBUG)
 
-    engine = SymbolicEngine()
+    engine = _create_engine(args.engine)
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind((args.host, args.port))
