@@ -599,6 +599,170 @@ footer a { color: var(--accent); text-decoration: none; }
   <p style="color:var(--text-dim);font-size:0.9rem">The trick: SAT/SMT doesn't try values — it <em>derives</em> them from constraints. Each learned clause permanently eliminates an exponential family of wrong guesses.</p>
 </section>
 
+<!-- ═══════════ TRITON BACKEND ═══════════ -->
+<section>
+  <h2>Triton Backend: <span>Concolic Execution</span></h2>
+  <p style="color:var(--text-dim);max-width:68ch;margin-bottom:1rem">Ponce4Ghidra ships two engines. angr explores all paths; Triton follows one concrete path while tracking symbolic state — no path explosion, ever.</p>
+
+  <!-- angr vs Triton comparison -->
+  <div class="arch-diagram">
+    <svg viewBox="0 0 780 280" xmlns="http://www.w3.org/2000/svg">
+      <!-- angr side -->
+      <rect x="20" y="15" width="360" height="250" rx="10" fill="#00875a" fill-opacity="0.04" stroke="#00875a" stroke-opacity="0.25"/>
+      <text x="200" y="40" text-anchor="middle" fill="#00875a" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700">angr — Symbolic Execution</text>
+
+      <!-- Fork tree -->
+      <rect x="160" y="60" width="80" height="28" rx="4" fill="#ffffff" stroke="#d8dce3"/>
+      <text x="200" y="79" text-anchor="middle" fill="#1a1d23" font-family="JetBrains Mono,monospace" font-size="9">entry</text>
+
+      <line x1="170" y1="92" x2="120" y2="115" stroke="#00875a" stroke-width="1.5"/>
+      <line x1="230" y1="92" x2="280" y2="115" stroke="#cf222e" stroke-width="1.5"/>
+
+      <rect x="80" y="115" width="80" height="28" rx="4" fill="#00875a" fill-opacity="0.1" stroke="#00875a" stroke-opacity="0.4"/>
+      <text x="120" y="133" text-anchor="middle" fill="#00875a" font-family="JetBrains Mono,monospace" font-size="8">x[0]==0x50 ✓</text>
+
+      <rect x="240" y="115" width="80" height="28" rx="4" fill="#cf222e" fill-opacity="0.06" stroke="#cf222e" stroke-opacity="0.3"/>
+      <text x="280" y="133" text-anchor="middle" fill="#cf222e" font-family="JetBrains Mono,monospace" font-size="8">x[0]!=0x50 ✗</text>
+
+      <line x1="90" y1="147" x2="60" y2="170" stroke="#00875a" stroke-width="1.5"/>
+      <line x1="150" y1="147" x2="180" y2="170" stroke="#cf222e" stroke-width="1.5"/>
+
+      <rect x="20" y="170" width="80" height="28" rx="4" fill="#00875a" fill-opacity="0.1" stroke="#00875a" stroke-opacity="0.4"/>
+      <text x="60" y="188" text-anchor="middle" fill="#00875a" font-family="JetBrains Mono,monospace" font-size="8">x[1]==0x34 ✓</text>
+
+      <rect x="140" y="170" width="80" height="28" rx="4" fill="#cf222e" fill-opacity="0.06" stroke="#cf222e" stroke-opacity="0.3"/>
+      <text x="180" y="188" text-anchor="middle" fill="#cf222e" font-family="JetBrains Mono,monospace" font-size="8">x[1]!=0x34 ✗</text>
+
+      <text x="60" y="218" text-anchor="middle" fill="#5a6270" font-family="Inter,sans-serif" font-size="9">... more forks ...</text>
+
+      <text x="200" y="248" text-anchor="middle" fill="#5a6270" font-family="Inter,sans-serif" font-size="10">Explores <tspan font-weight="600" fill="#1a1d23">all paths</tspan> simultaneously</text>
+      <text x="200" y="262" text-anchor="middle" fill="#cf222e" font-family="Inter,sans-serif" font-size="9">⚠ Path explosion on large binaries</text>
+
+      <!-- Triton side -->
+      <rect x="400" y="15" width="360" height="250" rx="10" fill="#8250df" fill-opacity="0.04" stroke="#8250df" stroke-opacity="0.25"/>
+      <text x="580" y="40" text-anchor="middle" fill="#8250df" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700">Triton — Concolic Execution</text>
+
+      <!-- Single path with annotations -->
+      <rect x="540" y="60" width="80" height="28" rx="4" fill="#ffffff" stroke="#d8dce3"/>
+      <text x="580" y="79" text-anchor="middle" fill="#1a1d23" font-family="JetBrains Mono,monospace" font-size="9">entry</text>
+      <line x1="580" y1="92" x2="580" y2="115" stroke="#8250df" stroke-width="2"/>
+
+      <rect x="540" y="115" width="80" height="28" rx="4" fill="#8250df" fill-opacity="0.1" stroke="#8250df" stroke-opacity="0.4"/>
+      <text x="580" y="133" text-anchor="middle" fill="#8250df" font-family="JetBrains Mono,monospace" font-size="8">cmp [rdi],0x50</text>
+      <line x1="580" y1="147" x2="580" y2="170" stroke="#8250df" stroke-width="2"/>
+
+      <!-- Annotation: concrete + symbolic -->
+      <rect x="420" y="120" width="105" height="18" rx="3" fill="#ffffff" stroke="#d8dce3"/>
+      <text x="472" y="133" text-anchor="middle" fill="#5a6270" font-family="JetBrains Mono,monospace" font-size="7.5">concrete: ZF=0</text>
+      <rect x="655" y="120" width="100" height="18" rx="3" fill="#8250df" fill-opacity="0.08" stroke="#8250df" stroke-opacity="0.3"/>
+      <text x="705" y="133" text-anchor="middle" fill="#8250df" font-family="JetBrains Mono,monospace" font-size="7.5">sym: x[0]==0x50</text>
+
+      <rect x="540" y="170" width="80" height="28" rx="4" fill="#8250df" fill-opacity="0.1" stroke="#8250df" stroke-opacity="0.4"/>
+      <text x="580" y="188" text-anchor="middle" fill="#8250df" font-family="JetBrains Mono,monospace" font-size="8">cmp [rdi+1],0x34</text>
+      <line x1="580" y1="202" x2="580" y2="218" stroke="#8250df" stroke-width="2"/>
+
+      <text x="580" y="232" text-anchor="middle" fill="#5a6270" font-family="Inter,sans-serif" font-size="9">... single path ...</text>
+
+      <text x="580" y="248" text-anchor="middle" fill="#5a6270" font-family="Inter,sans-serif" font-size="10">Follows <tspan font-weight="600" fill="#1a1d23">one path</tspan>, records constraints</text>
+      <text x="580" y="262" text-anchor="middle" fill="#00875a" font-family="Inter,sans-serif" font-size="9">✓ Never path-explodes</text>
+    </svg>
+  </div>
+
+  <h3 style="color:#8250df;font-size:1.1rem;margin:2rem 0 1rem">How Triton Works — Instruction-Level Semantics</h3>
+  <p style="color:var(--text-dim);max-width:68ch;margin-bottom:0.8rem">Triton translates every CPU instruction into a math expression. No intermediate representation — it works directly on x86/ARM machine code.</p>
+
+  <div class="arch-diagram">
+    <svg viewBox="0 0 780 220" xmlns="http://www.w3.org/2000/svg">
+      <!-- Instruction -->
+      <rect x="20" y="20" width="160" height="70" rx="8" fill="#ffffff" stroke="#d8dce3"/>
+      <text x="100" y="42" text-anchor="middle" fill="#5a6270" font-family="Inter,sans-serif" font-size="9" font-weight="600" letter-spacing="0.05em">CPU INSTRUCTION</text>
+      <text x="100" y="65" text-anchor="middle" fill="#1a1d23" font-family="JetBrains Mono,monospace" font-size="11" font-weight="600">xor eax, 0x42</text>
+      <text x="100" y="82" text-anchor="middle" fill="#5a6270" font-family="JetBrains Mono,monospace" font-size="9">35 42 00 00 00</text>
+
+      <line x1="185" y1="55" x2="225" y2="55" stroke="#5a6270" stroke-width="1.5" marker-end="url(#ad)"/>
+
+      <!-- Triton processing -->
+      <rect x="230" y="10" width="200" height="90" rx="8" fill="#8250df" fill-opacity="0.06" stroke="#8250df" stroke-opacity="0.3"/>
+      <text x="330" y="32" text-anchor="middle" fill="#8250df" font-family="Inter,sans-serif" font-size="10" font-weight="700">Triton Processing</text>
+      <text x="330" y="52" text-anchor="middle" fill="#1a1d23" font-family="JetBrains Mono,monospace" font-size="9">eax_new = eax_old ⊕ 0x42</text>
+      <text x="330" y="67" text-anchor="middle" fill="#1a1d23" font-family="JetBrains Mono,monospace" font-size="9">ZF = (eax_new == 0)</text>
+      <text x="330" y="82" text-anchor="middle" fill="#1a1d23" font-family="JetBrains Mono,monospace" font-size="9">SF = eax_new[31]</text>
+      <text x="330" y="92" text-anchor="middle" fill="#5a6270" font-family="Inter,sans-serif" font-size="8">+ CF, OF, PF, AF flags</text>
+
+      <!-- Two outputs -->
+      <line x1="435" y1="40" x2="475" y2="40" stroke="#5a6270" stroke-width="1" marker-end="url(#ad)"/>
+      <line x1="435" y1="70" x2="475" y2="70" stroke="#5a6270" stroke-width="1" marker-end="url(#ad)"/>
+
+      <!-- Concrete -->
+      <rect x="480" y="15" width="140" height="45" rx="6" fill="#ffffff" stroke="#d8dce3"/>
+      <text x="550" y="33" text-anchor="middle" fill="#5a6270" font-family="Inter,sans-serif" font-size="9" font-weight="600">CONCRETE</text>
+      <text x="550" y="50" text-anchor="middle" fill="#1a1d23" font-family="JetBrains Mono,monospace" font-size="10">eax = 0x12</text>
+
+      <!-- Symbolic -->
+      <rect x="480" y="65" width="280" height="45" rx="6" fill="#8250df" fill-opacity="0.06" stroke="#8250df" stroke-opacity="0.3"/>
+      <text x="550" y="83" text-anchor="middle" fill="#8250df" font-family="Inter,sans-serif" font-size="9" font-weight="600">SYMBOLIC</text>
+      <text x="660" y="100" text-anchor="middle" fill="#8250df" font-family="JetBrains Mono,monospace" font-size="10">eax = input_0 ⊕ 0x42</text>
+
+      <!-- Bottom: what Salwan built -->
+      <rect x="20" y="130" width="740" height="70" rx="8" fill="#ffffff" stroke="#d8dce3"/>
+      <text x="390" y="150" text-anchor="middle" fill="#1a1d23" font-family="Inter,sans-serif" font-size="10" font-weight="700">Jonathan Salwan's core contribution: precise semantics for every instruction</text>
+      <text x="130" y="172" text-anchor="middle" fill="#5a6270" font-family="JetBrains Mono,monospace" font-size="9">x86_64: ~1500 insns</text>
+      <text x="310" y="172" text-anchor="middle" fill="#5a6270" font-family="JetBrains Mono,monospace" font-size="9">AArch64: ~500 insns</text>
+      <text x="480" y="172" text-anchor="middle" fill="#5a6270" font-family="JetBrains Mono,monospace" font-size="9">ARM32: ~300 insns</text>
+      <text x="650" y="172" text-anchor="middle" fill="#5a6270" font-family="JetBrains Mono,monospace" font-size="9">RISC-V: ~200 insns</text>
+      <text x="390" y="192" text-anchor="middle" fill="#5a6270" font-family="Inter,sans-serif" font-size="9">Each instruction modeled with all flag side-effects (EFLAGS: CF, ZF, SF, OF, PF, AF)</text>
+    </svg>
+  </div>
+
+  <!-- When to use which engine -->
+  <h3 style="color:var(--accent);font-size:1.1rem;margin:2rem 0 1rem">When to Use Which Engine</h3>
+  <div style="overflow-x:auto">
+  <table class="compare-table">
+    <tr><th>Scenario</th><th>angr</th><th>Triton</th></tr>
+    <tr>
+      <td>Small function, find the password</td>
+      <td style="color:var(--accent);font-weight:500">Best — explores all paths, guaranteed to find it</td>
+      <td>Works — but needs a concrete input to start from</td>
+    </tr>
+    <tr>
+      <td>Large binary, DRM key derivation</td>
+      <td style="color:var(--red)">Path explosion</td>
+      <td style="color:var(--accent);font-weight:500">Best — follows one trace, no explosion</td>
+    </tr>
+    <tr>
+      <td>Obfuscated code (VM/whitebox)</td>
+      <td style="color:var(--red)">Constraint explosion</td>
+      <td style="color:var(--accent);font-weight:500">Best — doesn't need to "understand" the code</td>
+    </tr>
+    <tr>
+      <td>Have a Frida trace</td>
+      <td>Can't replay a trace</td>
+      <td style="color:var(--accent);font-weight:500">Best — replay trace with symbolic tracking</td>
+    </tr>
+    <tr>
+      <td>No concrete input available</td>
+      <td style="color:var(--accent);font-weight:500">Best — starts from scratch</td>
+      <td style="color:var(--red)">Needs a starting input</td>
+    </tr>
+    <tr>
+      <td>Want all possible solutions</td>
+      <td style="color:var(--accent);font-weight:500">Best — finds every satisfying path</td>
+      <td>One path at a time (negate + re-run for alternatives)</td>
+    </tr>
+  </table>
+  </div>
+
+  <!-- DRM workflow teaser -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.3rem 1.6rem;margin:1.5rem 0">
+    <p style="margin:0;font-weight:600;font-size:0.95rem">The DRM Reverse Engineering Workflow</p>
+    <p style="margin:0.5rem 0 0;color:var(--text-dim);font-size:0.9rem">
+      <span style="color:#e8590c;font-weight:600">Frida</span> captures runtime data (keys, I/O samples) →
+      <span style="color:var(--accent);font-weight:600">Ponce4Ghidra</span> analyzes the algorithm (angr for small funcs, Triton for large) →
+      <span style="color:var(--blue);font-weight:600">unidbg</span> reproduces it as a standalone service.
+    </p>
+  </div>
+</section>
+
 <!-- ═══════════ FEATURES ═══════════ -->
 <section>
   <h2><span>Features</span></h2>
