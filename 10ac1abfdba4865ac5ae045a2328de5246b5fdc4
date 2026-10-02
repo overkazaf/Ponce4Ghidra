@@ -1,0 +1,221 @@
+src/main/java/ponce4ghidra/actions/SolveAction.java
+  744b688fc115f280 1-345
+build.gradle
+  744b688fc115f280 1-27
+python/ponce4ghidra_engine/__main__.py
+  744b688fc115f280 1-3
+src/main/java/ponce4ghidra/actions/SetFindAction.java
+  744b688fc115f280 1-69
+test/test_license.c
+  744b688fc115f280 1-128
+src/main/java/ponce4ghidra/actions/SetAvoidAction.java
+  744b688fc115f280 1-69
+src/main/java/ponce4ghidra/actions/ActionContexts.java
+  744b688fc115f280 1-40
+src/main/java/ponce4ghidra/actions/SymbolizeArgvAction.java
+  744b688fc115f280 1-93
+src/main/java/ponce4ghidra/engine/EngineProtocol.java
+  744b688fc115f280 1-241
+python/ponce4ghidra_engine/protocol.py
+  744b688fc115f280 1-40
+test/test_engine.py
+  744b688fc115f280 1-619
+.gitignore
+  744b688fc115f280 1-26
+src/main/java/ponce4ghidra/actions/SaveSessionAction.java
+  744b688fc115f280 1-33
+src/main/java/ponce4ghidra/highlight/PathHighlighter.java
+  744b688fc115f280 1-67
+src/main/java/ponce4ghidra/actions/HelpAction.java
+  744b688fc115f280 1-108
+extension.properties
+  744b688fc115f280 1-5
+Module.manifest
+  744b688fc115f280 1
+python/requirements.txt
+  744b688fc115f280 1
+src/main/java/ponce4ghidra/SessionPersistence.java
+  744b688fc115f280 1-84
+src/main/java/ponce4ghidra/actions/SymbolizeMemoryAction.java
+  744b688fc115f280 1-79
+src/main/java/ponce4ghidra/actions/SymbolizeFunctionArgumentAction.java
+  744b688fc115f280 1-111
+settings.gradle
+  744b688fc115f280 1
+src/main/java/ponce4ghidra/engine/EngineManager.java
+  744b688fc115f280 1-265
+src/main/java/ponce4ghidra/ui/Icons.java
+  744b688fc115f280 1-51
+test/test_crackme.c
+  744b688fc115f280 1-30
+python/ponce4ghidra_engine/server.py
+  744b688fc115f280 1-120
+src/main/java/ponce4ghidra/actions/RestoreSessionAction.java
+  744b688fc115f280 1-33
+src/main/java/ponce4ghidra/Ponce4GhidraPlugin.java
+  744b688fc115f280 1-263
+src/main/java/ponce4ghidra/ui/Solution.java
+  744b688fc115f280 1-68
+src/main/java/ponce4ghidra/actions/SymbolizeRegisterAction.java
+  744b688fc115f280 1-87
+src/main/java/ponce4ghidra/actions/Prompts.java
+  744b688fc115f280 1-63
+python/ponce4ghidra_engine/engine.py
+  744b688fc115f280 1-719
+src/main/java/ponce4ghidra/ui/SymbolicStateProvider.java
+  744b688fc115f280 1-253
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "10ac1abfdba4865ac5ae045a2328de5246b5fdc4",
+  "prompts": {
+    "744b688fc115f280": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e2ad7fcf-a277-491a-9237-f2b42081ac4d",
+        "model": "deepseek-flash"
+      },
+      "human_author": "nongjiawu",
+      "messages": [],
+      "total_additions": 4142,
+      "total_deletions": 0,
+      "accepted_lines": 4142,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "src/main/java/ponce4ghidra/ui/Solution.java": {
+          "additions": 68,
+          "accepted_lines": 68
+        },
+        "src/main/java/ponce4ghidra/actions/SymbolizeRegisterAction.java": {
+          "additions": 87,
+          "accepted_lines": 87
+        },
+        "src/main/java/ponce4ghidra/highlight/PathHighlighter.java": {
+          "additions": 67,
+          "accepted_lines": 67
+        },
+        "python/ponce4ghidra_engine/server.py": {
+          "additions": 120,
+          "accepted_lines": 120
+        },
+        ".gitignore": {
+          "additions": 26,
+          "accepted_lines": 26
+        },
+        "src/main/java/ponce4ghidra/SessionPersistence.java": {
+          "additions": 84,
+          "accepted_lines": 84
+        },
+        "src/main/java/ponce4ghidra/actions/HelpAction.java": {
+          "additions": 108,
+          "accepted_lines": 108
+        },
+        "src/main/java/ponce4ghidra/engine/EngineManager.java": {
+          "additions": 265,
+          "accepted_lines": 265
+        },
+        "src/main/java/ponce4ghidra/actions/ActionContexts.java": {
+          "additions": 40,
+          "accepted_lines": 40
+        },
+        "src/main/java/ponce4ghidra/actions/SolveAction.java": {
+          "additions": 345,
+          "accepted_lines": 345
+        },
+        "src/main/java/ponce4ghidra/actions/Prompts.java": {
+          "additions": 63,
+          "accepted_lines": 63
+        },
+        "Module.manifest": {
+          "additions": 1,
+          "accepted_lines": 1
+        },
+        "src/main/java/ponce4ghidra/actions/SymbolizeFunctionArgumentAction.java": {
+          "additions": 111,
+          "accepted_lines": 111
+        },
+        "src/main/java/ponce4ghidra/actions/SaveSessionAction.java": {
+          "additions": 33,
+          "accepted_lines": 33
+        },
+        "src/main/java/ponce4ghidra/actions/SetAvoidAction.java": {
+          "additions": 69,
+          "accepted_lines": 69
+        },
+        "src/main/java/ponce4ghidra/Ponce4GhidraPlugin.java": {
+          "additions": 263,
+          "accepted_lines": 263
+        },
+        "python/ponce4ghidra_engine/engine.py": {
+          "additions": 719,
+          "accepted_lines": 719
+        },
+        "python/ponce4ghidra_engine/protocol.py": {
+          "additions": 40,
+          "accepted_lines": 40
+        },
+        "python/requirements.txt": {
+          "additions": 1,
+          "accepted_lines": 1
+        },
+        "src/main/java/ponce4ghidra/ui/SymbolicStateProvider.java": {
+          "additions": 253,
+          "accepted_lines": 253
+        },
+        "src/main/java/ponce4ghidra/actions/SetFindAction.java": {
+          "additions": 69,
+          "accepted_lines": 69
+        },
+        "src/main/java/ponce4ghidra/actions/RestoreSessionAction.java": {
+          "additions": 33,
+          "accepted_lines": 33
+        },
+        "src/main/java/ponce4ghidra/ui/Icons.java": {
+          "additions": 51,
+          "accepted_lines": 51
+        },
+        "test/test_license.c": {
+          "additions": 128,
+          "accepted_lines": 128
+        },
+        "build.gradle": {
+          "additions": 27,
+          "accepted_lines": 27
+        },
+        "settings.gradle": {
+          "additions": 1,
+          "accepted_lines": 1
+        },
+        "test/test_crackme.c": {
+          "additions": 30,
+          "accepted_lines": 30
+        },
+        "src/main/java/ponce4ghidra/actions/SymbolizeArgvAction.java": {
+          "additions": 93,
+          "accepted_lines": 93
+        },
+        "src/main/java/ponce4ghidra/engine/EngineProtocol.java": {
+          "additions": 241,
+          "accepted_lines": 241
+        },
+        "python/ponce4ghidra_engine/__main__.py": {
+          "additions": 3,
+          "accepted_lines": 3
+        },
+        "extension.properties": {
+          "additions": 5,
+          "accepted_lines": 5
+        },
+        "test/test_engine.py": {
+          "additions": 619,
+          "accepted_lines": 619
+        },
+        "src/main/java/ponce4ghidra/actions/SymbolizeMemoryAction.java": {
+          "additions": 79,
+          "accepted_lines": 79
+        }
+      }
+    }
+  }
+}
