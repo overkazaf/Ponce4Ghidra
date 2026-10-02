@@ -1,0 +1,26 @@
+# Build outputs
+build/
+dist/
+.gradle/
+
+# Ghidra test project
+Ponce4GhidraTest.gpr
+Ponce4GhidraTest.lock
+Ponce4GhidraTest.lock~
+Ponce4GhidraTest.rep/
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+Thumbs.db

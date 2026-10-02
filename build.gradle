@@ -1,0 +1,27 @@
+apply plugin: 'java'
+
+def ghidraInstallDir
+
+if (System.env.GHIDRA_INSTALL_DIR) {
+    ghidraInstallDir = System.env.GHIDRA_INSTALL_DIR
+} else if (project.hasProperty("GHIDRA_INSTALL_DIR")) {
+    ghidraInstallDir = project.getProperty("GHIDRA_INSTALL_DIR")
+} else {
+    throw new GradleException("GHIDRA_INSTALL_DIR is not defined")
+}
+
+apply from: new File(ghidraInstallDir).toPath().resolve("support/buildExtension.gradle").toFile()
+
+// buildExtension zips the whole project directory, which sweeps in the Ghidra
+// test project that lives next to the sources. Shipping it is wrong twice over:
+// it is someone's scratch project, and its .lock file lands in
+// Ghidra/Extensions/ where Ghidra then reads it as a live project lock.
+tasks.named('buildExtension') {
+	exclude 'Ponce4GhidraTest.rep/**'
+	exclude 'Ponce4GhidraTest.gpr'
+	exclude 'Ponce4GhidraTest.lock'
+	exclude 'Ponce4GhidraTest.lock~'
+	// Byte-code caches are rebuilt on first import and only add stale copies of
+	// engine.py to the package.
+	exclude '**/__pycache__/**'
+}
