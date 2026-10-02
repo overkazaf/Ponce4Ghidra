@@ -121,10 +121,13 @@ class TritonEngine:
 
         self.ctx = ctx
         self.binary = binary
+        self._binary_obj = binary
+        self._triton_arch = triton_arch
         self.arch_info = arch_info
         self.binary_path = binary_path
         self._entry_point = binary.entrypoint
         self._start_addr = None
+        self._stack_base = arch_info.get("stack", 0x7fff0000)
 
         is_library = False
         if isinstance(binary, lief.ELF.Binary):
@@ -325,85 +328,166 @@ class TritonEngine:
                 use_veritesting: bool = False, use_unicorn: bool = False) -> dict:
         """Concolic exploration: execute concretely, negate branches to find paths.
 
-        Unlike angr which forks all paths, Triton follows one concrete path and
-        uses the solver to find alternative inputs that reach different branches.
+        Strategy: run the function with concrete input, collecting branch
+        constraints. When the path misses the target, negate one branch at a
+        time to steer toward Find addresses. Each attempt creates a fresh
+        TritonContext (Triton accumulates state that cannot be cleanly reset).
         """
-        self._require_ctx()
+        if self.ctx is None:
+            raise ValueError("Engine is not initialized: no binary is loaded.")
         if not self.find_addrs:
             raise ValueError("No find addresses set. Call set_find first.")
 
-        ip_reg_name = self.arch_info["ip"]
-        ip_reg = self._get_register(ip_reg_name)
         start = self._start_addr or self._entry_point
+        ret_addr = 0xdeadbeef
 
         found_count = 0
         avoided_count = 0
         errored_count = 0
-        step_count = 0
-        branches_to_try = []
-        deadline = time.monotonic() + timeout_sec
-        last_report = time.monotonic()
-        t0 = time.monotonic()
-
-        self.ctx.setConcreteRegisterValue(ip_reg, start)
+        total_steps = 0
+        max_attempts = 64
         max_instructions = 500_000
+        deadline = time.monotonic() + timeout_sec
+        t0 = time.monotonic()
+        last_report = time.monotonic()
+        pending_models = []
 
-        while step_count < max_instructions and time.monotonic() < deadline:
-            pc = self.ctx.getConcreteRegisterValue(ip_reg)
+        # Concrete input values — updated by models between attempts
+        concrete_bufs = {}
+        for var_name, var_info in self.symbolic_vars.items():
+            if isinstance(var_info, tuple):
+                buf_addr, size = var_info
+                concrete_bufs[var_name] = [
+                    self.ctx.getConcreteMemoryValue(buf_addr + i) for i in range(size)
+                ]
 
-            if pc in self.find_addrs:
-                found_count += 1
-                self.found_states.append(self._capture_state())
-                logger.info("Triton: found target at %#x after %d steps", pc, step_count)
+        for attempt in range(max_attempts):
+            if time.monotonic() >= deadline:
                 break
 
-            if pc in self.avoid_addrs:
-                avoided_count += 1
-                if branches_to_try:
-                    constraint, model_seed = branches_to_try.pop()
-                    self._apply_model(model_seed)
-                    self.ctx.setConcreteRegisterValue(ip_reg, start)
-                    step_count = 0
-                    continue
-                else:
+            # Fresh context each attempt — Triton accumulates constraints
+            # and symbolic expressions that pollute subsequent runs.
+            ctx = triton.TritonContext(self._triton_arch)
+            ctx.setMode(triton.MODE.ALIGNED_MEMORY, True)
+            self._load_segments(ctx, self._binary_obj)
+
+            # Set up the input buffer with current concrete values
+            for var_name, var_info in self.symbolic_vars.items():
+                if isinstance(var_info, tuple):
+                    buf_addr, size = var_info
+                    vals = concrete_bufs.get(var_name, [0x41] * size)
+                    for i in range(size):
+                        ctx.setConcreteMemoryValue(buf_addr + i, vals[i])
+                    ctx.setConcreteMemoryValue(buf_addr + size, 0)
+                    for i in range(size):
+                        sym = ctx.symbolizeMemory(triton.MemoryAccess(buf_addr + i, 1))
+                        sym.setAlias(f"{var_name}_{i}")
+
+            ip_reg = ctx.getRegister(self.arch_info["ip"])
+            sp_reg = ctx.getRegister(self.arch_info["sp"])
+            ctx.setConcreteRegisterValue(ip_reg, start)
+            ctx.setConcreteRegisterValue(sp_reg, self._stack_base)
+
+            # Set up function argument register
+            for var_name, var_info in self.symbolic_vars.items():
+                if isinstance(var_info, tuple):
+                    buf_addr, _ = var_info
+                    arg_reg_name = self.arch_info["arg_regs"][0]
+                    ctx.setConcreteRegisterValue(ctx.getRegister(arg_reg_name), buf_addr)
+
+            # Return address on stack
+            word = self.arch_info["word"]
+            for i in range(word):
+                ctx.setConcreteMemoryValue(self._stack_base + i, (ret_addr >> (i * 8)) & 0xFF)
+
+            step_count = 0
+            hit_find = False
+
+            while step_count < max_instructions and time.monotonic() < deadline:
+                pc = ctx.getConcreteRegisterValue(ip_reg)
+
+                if pc in self.find_addrs:
+                    found_count += 1
+                    self.found_states.append({
+                        "model": {
+                            sym_id: ctx.getConcreteVariableValue(sym_var)
+                            for sym_id, sym_var in ctx.getSymbolicVariables().items()
+                        },
+                        "path_constraints": list(ctx.getPathConstraints()),
+                    })
+                    # Save the winning concrete values back to self.ctx
+                    for vn, vi in self.symbolic_vars.items():
+                        if isinstance(vi, tuple):
+                            ba, sz = vi
+                            for i in range(sz):
+                                v = ctx.getConcreteMemoryValue(ba + i)
+                                self.ctx.setConcreteMemoryValue(ba + i, v)
+                    logger.info("Triton: found target %#x on attempt %d (%d steps)",
+                                pc, attempt + 1, step_count)
+                    hit_find = True
                     break
 
-            inst = triton.Instruction()
-            inst.setAddress(pc)
-            opcodes = self.ctx.getConcreteMemoryAreaValue(pc, 16)
-            inst.setOpcode(bytes(opcodes))
+                if pc in self.avoid_addrs:
+                    avoided_count += 1
+                    break
 
-            try:
-                self.ctx.processing(inst)
-            except Exception as e:
-                logger.warning("Triton: error at %#x: %s", pc, e)
-                errored_count += 1
+                if pc == ret_addr:
+                    break
+
+                inst = triton.Instruction(pc, bytes(ctx.getConcreteMemoryAreaValue(pc, 16)))
+                try:
+                    ctx.processing(inst)
+                except Exception as e:
+                    logger.warning("Triton: error at %#x: %s", pc, e)
+                    errored_count += 1
+                    break
+
+                step_count += 1
+
+                if inst.isBranch() and inst.isSymbolized():
+                    pcs = ctx.getPathConstraints()
+                    if pcs:
+                        for branch in pcs[-1].getBranchConstraints():
+                            if not branch["isTaken"]:
+                                model = ctx.getModel(branch["constraint"])
+                                if model:
+                                    pending_models.append(model)
+
+                now = time.monotonic()
+                if progress_callback and now - last_report >= 1.0:
+                    last_report = now
+                    progress_callback({
+                        "active": len(pending_models),
+                        "found": found_count,
+                        "avoided": avoided_count,
+                        "steps": total_steps + step_count,
+                        "elapsed": round(now - t0, 1),
+                    })
+
+            total_steps += step_count
+
+            if hit_find:
+                break
+            if not pending_models:
                 break
 
-            step_count += 1
+            model = pending_models.pop()
+            for sym_id, sym_model in model.items():
+                var = ctx.getSymbolicVariable(sym_id)
+                origin = var.getOrigin()
+                for vn, vi in self.symbolic_vars.items():
+                    if isinstance(vi, tuple):
+                        ba, sz = vi
+                        idx = origin - ba
+                        if 0 <= idx < sz:
+                            concrete_bufs[vn][idx] = sym_model.getValue()
 
-            if inst.isBranch() and inst.isSymbolized():
-                taken_constraint = self.ctx.getPathConstraints()[-1]
-                for branch in taken_constraint.getBranchConstraints():
-                    if not branch["isTaken"]:
-                        model = self.ctx.getModel(branch["constraint"])
-                        if model:
-                            branches_to_try.append((branch["constraint"], model))
-
-            now = time.monotonic()
-            if progress_callback and now - last_report >= 1.0:
-                last_report = now
-                progress_callback({
-                    "active": len(branches_to_try),
-                    "found": found_count,
-                    "avoided": avoided_count,
-                    "steps": step_count,
-                    "elapsed": round(now - t0, 1),
-                })
+            logger.info("Triton: attempt %d, trying alternative (%d pending)",
+                        attempt + 1, len(pending_models))
 
         return {
             "found_count": found_count,
-            "active_count": len(branches_to_try),
+            "active_count": len(pending_models),
             "avoided_count": avoided_count,
             "deadended_count": 0,
             "errored_count": errored_count,
