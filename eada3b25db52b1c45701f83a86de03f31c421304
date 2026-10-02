@@ -1,0 +1,33 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "eada3b25db52b1c45701f83a86de03f31c421304",
+  "prompts": {
+    "744b688fc115f280": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e2ad7fcf-a277-491a-9237-f2b42081ac4d",
+        "model": "deepseek-flash"
+      },
+      "human_author": "nongjiawu",
+      "messages": [],
+      "total_additions": 540,
+      "total_deletions": 1859,
+      "accepted_lines": 540,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "docs/img/constraints-tab.png": {
+          "additions": 368,
+          "deletions": 1713,
+          "accepted_lines": 368
+        },
+        "docs/img/results-early.png": {
+          "additions": 172,
+          "deletions": 146,
+          "accepted_lines": 172
+        }
+      }
+    }
+  }
+}
