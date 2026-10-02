@@ -412,6 +412,188 @@ footer a { color: var(--accent); text-decoration: none; }
   </div>
 </section>
 
+<!-- ═══════════ DEEP DIVE: SAT/SMT ═══════════ -->
+<section>
+  <h2>Under the Hood: <span>SAT/SMT Solving</span></h2>
+  <p style="color:var(--text-dim);max-width:65ch;margin-bottom:1.5rem">Three layers of technology stack to turn a binary into an equation and solve it.</p>
+
+  <!-- Layer diagram -->
+  <div class="arch-diagram">
+    <svg viewBox="0 0 780 420" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="lg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00d4aa" stop-opacity="0.12"/><stop offset="1" stop-color="#00d4aa" stop-opacity="0.02"/></linearGradient>
+        <linearGradient id="lg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0a030" stop-opacity="0.12"/><stop offset="1" stop-color="#f0a030" stop-opacity="0.02"/></linearGradient>
+        <linearGradient id="lg3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#58a6ff" stop-opacity="0.12"/><stop offset="1" stop-color="#58a6ff" stop-opacity="0.02"/></linearGradient>
+        <marker id="ad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#8892a4"/></marker>
+      </defs>
+
+      <!-- Layer 1: Symbolic Execution -->
+      <rect x="20" y="10" width="740" height="110" rx="8" fill="url(#lg1)" stroke="#00d4aa" stroke-opacity="0.35"/>
+      <text x="40" y="35" fill="#00d4aa" font-family="Inter,sans-serif" font-size="11" font-weight="700" letter-spacing="0.06em">LAYER 1 — SYMBOLIC EXECUTION (angr)</text>
+      <text x="40" y="52" fill="#8892a4" font-family="Inter,sans-serif" font-size="10">Runs the binary with math variables instead of concrete values. Forks at every branch.</text>
+
+      <rect x="40" y="65" width="115" height="40" rx="6" fill="#12171f" stroke="#1e2734"/>
+      <text x="97" y="89" text-anchor="middle" fill="#e2e8f0" font-family="JetBrains Mono,monospace" font-size="10">BVS("x",32)</text>
+      <line x1="160" y1="85" x2="190" y2="85" stroke="#8892a4" stroke-width="1" marker-end="url(#ad)"/>
+
+      <rect x="195" y="65" width="115" height="40" rx="6" fill="#12171f" stroke="#1e2734"/>
+      <text x="252" y="83" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">if(x[0]==0x50)</text>
+      <text x="252" y="97" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="9">branch → fork</text>
+      <line x1="315" y1="85" x2="345" y2="85" stroke="#8892a4" stroke-width="1" marker-end="url(#ad)"/>
+
+      <rect x="350" y="65" width="180" height="40" rx="6" fill="#12171f" stroke="#1e2734"/>
+      <text x="440" y="83" text-anchor="middle" fill="#00d4aa" font-family="JetBrains Mono,monospace" font-size="10">path_a: x[0]==0x50</text>
+      <text x="440" y="97" text-anchor="middle" fill="#f85149" font-family="JetBrains Mono,monospace" font-size="10">path_b: x[0]!=0x50</text>
+      <line x1="535" y1="85" x2="565" y2="85" stroke="#8892a4" stroke-width="1" marker-end="url(#ad)"/>
+
+      <rect x="570" y="65" width="175" height="40" rx="6" fill="#00d4aa" fill-opacity="0.1" stroke="#00d4aa" stroke-opacity="0.4"/>
+      <text x="657" y="83" text-anchor="middle" fill="#00d4aa" font-family="Inter,sans-serif" font-size="10" font-weight="600">Found path constraints:</text>
+      <text x="657" y="97" text-anchor="middle" fill="#00d4aa" font-family="JetBrains Mono,monospace" font-size="9">[x[0]==80, x[1]==52, ...]</text>
+
+      <!-- Arrow down -->
+      <line x1="390" y1="125" x2="390" y2="150" stroke="#f0a030" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+      <!-- Layer 2: SMT -->
+      <rect x="20" y="140" width="740" height="130" rx="8" fill="url(#lg2)" stroke="#f0a030" stroke-opacity="0.35"/>
+      <text x="40" y="165" fill="#f0a030" font-family="Inter,sans-serif" font-size="11" font-weight="700" letter-spacing="0.06em">LAYER 2 — SMT SOLVER (Z3)</text>
+      <text x="40" y="182" fill="#8892a4" font-family="Inter,sans-serif" font-size="10">Understands bit-vectors, arrays, and arithmetic. Translates to boolean logic for the SAT engine.</text>
+
+      <rect x="40" y="195" width="160" height="55" rx="6" fill="#12171f" stroke="#1e2734"/>
+      <text x="120" y="216" text-anchor="middle" fill="#f0a030" font-family="Inter,sans-serif" font-size="10" font-weight="600">Bit-Vector Theory</text>
+      <text x="120" y="232" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono,monospace" font-size="9">XOR, AND, shift</text>
+      <text x="120" y="244" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono,monospace" font-size="9">+ × mod 2ⁿ</text>
+
+      <rect x="220" y="195" width="160" height="55" rx="6" fill="#12171f" stroke="#1e2734"/>
+      <text x="300" y="216" text-anchor="middle" fill="#f0a030" font-family="Inter,sans-serif" font-size="10" font-weight="600">Array Theory</text>
+      <text x="300" y="232" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono,monospace" font-size="9">store(mem, addr, v)</text>
+      <text x="300" y="244" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono,monospace" font-size="9">load(mem, addr)==v</text>
+
+      <rect x="400" y="195" width="160" height="55" rx="6" fill="#12171f" stroke="#1e2734"/>
+      <text x="480" y="216" text-anchor="middle" fill="#f0a030" font-family="Inter,sans-serif" font-size="10" font-weight="600">Arithmetic</text>
+      <text x="480" y="232" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono,monospace" font-size="9">x + 0x20 == 0x87</text>
+      <text x="480" y="244" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono,monospace" font-size="9">linear + nonlinear</text>
+
+      <rect x="580" y="195" width="165" height="55" rx="6" fill="#f0a030" fill-opacity="0.1" stroke="#f0a030" stroke-opacity="0.4"/>
+      <text x="662" y="216" text-anchor="middle" fill="#f0a030" font-family="Inter,sans-serif" font-size="10" font-weight="600">Theory ↔ SAT Loop</text>
+      <text x="662" y="232" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="9">SAT proposes assignment</text>
+      <text x="662" y="244" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="9">Theory checks consistency</text>
+
+      <!-- Arrow down -->
+      <line x1="390" y1="275" x2="390" y2="300" stroke="#58a6ff" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+      <!-- Layer 3: SAT -->
+      <rect x="20" y="290" width="740" height="120" rx="8" fill="url(#lg3)" stroke="#58a6ff" stroke-opacity="0.35"/>
+      <text x="40" y="315" fill="#58a6ff" font-family="Inter,sans-serif" font-size="11" font-weight="700" letter-spacing="0.06em">LAYER 3 — SAT ENGINE (CDCL Algorithm)</text>
+      <text x="40" y="332" fill="#8892a4" font-family="Inter,sans-serif" font-size="10">Pure boolean satisfiability. The core NP-complete problem, made practical by conflict-driven clause learning.</text>
+
+      <rect x="40" y="345" width="130" height="48" rx="6" fill="#12171f" stroke="#1e2734"/>
+      <text x="105" y="365" text-anchor="middle" fill="#58a6ff" font-family="Inter,sans-serif" font-size="10" font-weight="600">1. Decide</text>
+      <text x="105" y="381" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="9">guess a bit value</text>
+      <line x1="175" y1="369" x2="195" y2="369" stroke="#8892a4" stroke-width="1" marker-end="url(#ad)"/>
+
+      <rect x="200" y="345" width="130" height="48" rx="6" fill="#12171f" stroke="#1e2734"/>
+      <text x="265" y="365" text-anchor="middle" fill="#58a6ff" font-family="Inter,sans-serif" font-size="10" font-weight="600">2. Propagate</text>
+      <text x="265" y="381" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="9">deduce forced values</text>
+      <line x1="335" y1="369" x2="355" y2="369" stroke="#8892a4" stroke-width="1" marker-end="url(#ad)"/>
+
+      <rect x="360" y="345" width="130" height="48" rx="6" fill="#12171f" stroke="#1e2734"/>
+      <text x="425" y="365" text-anchor="middle" fill="#f85149" font-family="Inter,sans-serif" font-size="10" font-weight="600">3. Conflict?</text>
+      <text x="425" y="381" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="9">found contradiction</text>
+      <line x1="495" y1="369" x2="515" y2="369" stroke="#8892a4" stroke-width="1" marker-end="url(#ad)"/>
+
+      <rect x="520" y="345" width="225" height="48" rx="6" fill="#58a6ff" fill-opacity="0.1" stroke="#58a6ff" stroke-opacity="0.4"/>
+      <text x="632" y="365" text-anchor="middle" fill="#58a6ff" font-family="Inter,sans-serif" font-size="10" font-weight="600">4. Learn clause + Backtrack</text>
+      <text x="632" y="381" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="9">permanently prune search space</text>
+
+      <!-- Loop arrow -->
+      <path d="M632,398 L632,408 L105,408 L105,398" fill="none" stroke="#58a6ff" stroke-width="1" stroke-dasharray="3,2"/>
+      <text x="368" y="405" text-anchor="middle" fill="#58a6ff" font-family="Inter,sans-serif" font-size="8" font-weight="600">repeat until SAT or UNSAT</text>
+    </svg>
+  </div>
+
+  <!-- Concrete example -->
+  <h3 style="color:var(--accent);font-size:1.1rem;margin:2rem 0 1rem">Concrete Example: Cracking test_crackme</h3>
+  <p style="color:var(--text-dim);max-width:65ch;margin-bottom:1rem">The check_password function compares each byte of the input. Here's what angr + Z3 see:</p>
+
+  <div class="arch-diagram">
+    <svg viewBox="0 0 780 320" xmlns="http://www.w3.org/2000/svg">
+      <!-- C code on the left -->
+      <text x="20" y="25" fill="#8892a4" font-family="Inter,sans-serif" font-size="10" font-weight="600" letter-spacing="0.05em">C SOURCE</text>
+      <rect x="20" y="35" width="240" height="170" rx="6" fill="#0d1117" stroke="#1e2734"/>
+      <text x="35" y="58" fill="#8892a4" font-family="JetBrains Mono,monospace" font-size="10">int check_password(char *p) {</text>
+      <text x="35" y="78" fill="#e2e8f0" font-family="JetBrains Mono,monospace" font-size="10">  if (p[0] != <tspan fill="#00d4aa">'P'</tspan>) return 0;</text>
+      <text x="35" y="98" fill="#e2e8f0" font-family="JetBrains Mono,monospace" font-size="10">  if (p[1] != <tspan fill="#00d4aa">'4'</tspan>) return 0;</text>
+      <text x="35" y="118" fill="#e2e8f0" font-family="JetBrains Mono,monospace" font-size="10">  if ((p[2]^0x42)!=<tspan fill="#00d4aa">0x10</tspan>) return 0;</text>
+      <text x="35" y="138" fill="#e2e8f0" font-family="JetBrains Mono,monospace" font-size="10">  if ((p[3]+0x20)!=<tspan fill="#00d4aa">0x87</tspan>) return 0;</text>
+      <text x="35" y="163" fill="#00d4aa" font-family="JetBrains Mono,monospace" font-size="10">  return 1; <tspan fill="#8892a4">// ← Find target</tspan></text>
+      <text x="35" y="195" fill="#8892a4" font-family="JetBrains Mono,monospace" font-size="10">}</text>
+
+      <!-- Arrow -->
+      <text x="290" y="110" fill="#8892a4" font-family="Inter,sans-serif" font-size="10">angr</text>
+      <text x="290" y="125" fill="#8892a4" font-family="Inter,sans-serif" font-size="10">explores</text>
+      <line x1="320" y1="115" x2="350" y2="115" stroke="#8892a4" stroke-width="1" marker-end="url(#ad)"/>
+
+      <!-- Constraints in the middle -->
+      <text x="360" y="25" fill="#f0a030" font-family="Inter,sans-serif" font-size="10" font-weight="600" letter-spacing="0.05em">CONSTRAINTS COLLECTED</text>
+      <rect x="360" y="35" width="200" height="170" rx="6" fill="#0d1117" stroke="#f0a030" stroke-opacity="0.3"/>
+      <text x="375" y="60" fill="#00d4aa" font-family="JetBrains Mono,monospace" font-size="10">x[0] == 0x50</text>
+      <text x="375" y="83" fill="#00d4aa" font-family="JetBrains Mono,monospace" font-size="10">x[1] == 0x34</text>
+      <text x="375" y="106" fill="#00d4aa" font-family="JetBrains Mono,monospace" font-size="10">x[2] ^ 0x42 == 0x10</text>
+      <text x="375" y="129" fill="#00d4aa" font-family="JetBrains Mono,monospace" font-size="10">x[3] + 0x20 == 0x87</text>
+      <text x="375" y="158" fill="#8892a4" font-family="Inter,sans-serif" font-size="9">4 constraints, 4 unknowns</text>
+      <text x="375" y="173" fill="#8892a4" font-family="Inter,sans-serif" font-size="9">32 bits total to solve</text>
+      <text x="375" y="195" fill="#f0a030" font-family="Inter,sans-serif" font-size="9" font-weight="500">All from the "return 1" path</text>
+
+      <!-- Arrow -->
+      <text x="580" y="110" fill="#8892a4" font-family="Inter,sans-serif" font-size="10">Z3</text>
+      <text x="580" y="125" fill="#8892a4" font-family="Inter,sans-serif" font-size="10">solves</text>
+      <line x1="600" y1="115" x2="630" y2="115" stroke="#8892a4" stroke-width="1" marker-end="url(#ad)"/>
+
+      <!-- Solution on the right -->
+      <text x="640" y="25" fill="#00d4aa" font-family="Inter,sans-serif" font-size="10" font-weight="600" letter-spacing="0.05em">SOLUTION</text>
+      <rect x="640" y="35" width="125" height="170" rx="6" fill="#00d4aa" fill-opacity="0.06" stroke="#00d4aa" stroke-opacity="0.4"/>
+      <text x="702" y="62" text-anchor="middle" fill="#e2e8f0" font-family="JetBrains Mono,monospace" font-size="10">x[0] = 0x50</text>
+      <text x="702" y="78" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="9">= 'P'</text>
+      <text x="702" y="100" text-anchor="middle" fill="#e2e8f0" font-family="JetBrains Mono,monospace" font-size="10">x[1] = 0x34</text>
+      <text x="702" y="116" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="9">= '4'</text>
+      <text x="702" y="138" text-anchor="middle" fill="#e2e8f0" font-family="JetBrains Mono,monospace" font-size="10">x[2] = 0x52</text>
+      <text x="702" y="154" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="9">= 'R'</text>
+      <text x="702" y="176" text-anchor="middle" fill="#e2e8f0" font-family="JetBrains Mono,monospace" font-size="10">x[3] = 0x67</text>
+      <text x="702" y="192" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="9">= 'g'</text>
+
+      <!-- Big answer -->
+      <rect x="280" y="240" width="220" height="55" rx="10" fill="#00d4aa" fill-opacity="0.12" stroke="#00d4aa" stroke-opacity="0.5"/>
+      <text x="390" y="265" text-anchor="middle" fill="#00d4aa" font-family="JetBrains Mono,monospace" font-size="22" font-weight="700">P 4 R g</text>
+      <text x="390" y="285" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="10">password cracked in 0.6 seconds</text>
+
+      <!-- Arrows to answer -->
+      <line x1="460" y1="210" x2="420" y2="238" stroke="#00d4aa" stroke-opacity="0.4" stroke-width="1" stroke-dasharray="3,2"/>
+      <line x1="702" y1="210" x2="480" y2="248" stroke="#00d4aa" stroke-opacity="0.4" stroke-width="1" stroke-dasharray="3,2"/>
+    </svg>
+  </div>
+
+  <!-- Comparison: why not brute force -->
+  <h3 style="color:var(--amber);font-size:1.1rem;margin:2rem 0 1rem">Why Not Brute Force?</h3>
+  <div style="overflow-x:auto">
+  <table class="compare-table">
+    <tr><th>Approach</th><th>4-byte password</th><th>16-byte license key</th><th>32-byte AES key</th></tr>
+    <tr>
+      <td class="method">Brute Force</td>
+      <td>2³² = 4.3 billion<br><span style="color:var(--amber)">~minutes</span></td>
+      <td>2¹²⁸ = 3.4 × 10³⁸<br><span style="color:var(--red)">heat death of universe</span></td>
+      <td>2²⁵⁶<br><span style="color:var(--red)">impossible</span></td>
+    </tr>
+    <tr>
+      <td class="method">SAT/SMT</td>
+      <td>32 boolean vars<br><span style="color:var(--accent)">< 1ms</span></td>
+      <td>128 boolean vars<br><span style="color:var(--accent)">< 1 second</span></td>
+      <td>256 boolean vars<br><span style="color:var(--accent)">seconds (if constraints exist)</span></td>
+    </tr>
+  </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.9rem">The trick: SAT/SMT doesn't try values — it <em>derives</em> them from constraints. Each learned clause permanently eliminates an exponential family of wrong guesses.</p>
+</section>
+
 <!-- ═══════════ FEATURES ═══════════ -->
 <section>
   <h2><span>Features</span></h2>
