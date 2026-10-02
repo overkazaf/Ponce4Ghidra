@@ -126,11 +126,11 @@ class TritonEngine:
         self._entry_point = binary.entrypoint
         self._start_addr = None
 
-        is_library = not binary.is_pie if hasattr(binary, "is_pie") else False
+        is_library = False
         if isinstance(binary, lief.ELF.Binary):
-            is_library = binary.header.file_type == lief.ELF.E_TYPE.DYNAMIC
+            is_library = "DYN" in str(binary.header.file_type)
         elif isinstance(binary, lief.MachO.Binary):
-            is_library = binary.header.file_type == lief.MachO.FILE_TYPES.DYLIB
+            is_library = "DYLIB" in str(binary.header.file_type)
 
         self._log("init", {"binary_path": binary_path})
         logger.info("Triton: loaded %s (%s)", binary_path, arch_name)
@@ -145,25 +145,29 @@ class TritonEngine:
 
     def _detect_arch(self, binary) -> str:
         if isinstance(binary, lief.ELF.Binary):
-            machine = binary.header.machine_type
-            if machine == lief.ELF.ARCH.x86_64:
+            machine = str(binary.header.machine_type)
+            if "X86_64" in machine:
                 return "x86_64"
-            if machine == lief.ELF.ARCH.i386:
+            if "I386" in machine or "X86" in machine:
                 return "x86"
-            if machine == lief.ELF.ARCH.AARCH64:
+            if "AARCH64" in machine:
                 return "aarch64"
+            if "ARM" in machine:
+                return "arm32"
         elif isinstance(binary, lief.MachO.Binary):
-            cpu = binary.header.cpu_type
-            if cpu == lief.MachO.CPU_TYPES.x86_64:
+            cpu = str(binary.header.cpu_type)
+            if "X86_64" in cpu:
                 return "x86_64"
-            if cpu == lief.MachO.CPU_TYPES.ARM64:
+            if "ARM64" in cpu or "AARCH64" in cpu:
                 return "aarch64"
+            if "ARM" in cpu:
+                return "arm32"
         raise ValueError(f"Cannot detect architecture from binary")
 
     def _load_segments(self, ctx, binary):
         if isinstance(binary, lief.ELF.Binary):
             for seg in binary.segments:
-                if seg.type == lief.ELF.SEGMENT_TYPES.LOAD and seg.physical_size > 0:
+                if "LOAD" in str(seg.type) and seg.physical_size > 0:
                     content = list(seg.content)
                     ctx.setConcreteMemoryAreaValue(seg.virtual_address, content)
         elif isinstance(binary, lief.MachO.Binary):
