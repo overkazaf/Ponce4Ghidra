@@ -1,0 +1,52 @@
+docs/index.html
+  744b688fc115f280 1-528
+src/main/java/ponce4ghidra/engine/EngineManager.java
+  744b688fc115f280 31,33-39,49-51,59
+python/ponce4ghidra_engine/engine_triton.py
+  744b688fc115f280 1-565
+python/ponce4ghidra_engine/server.py
+  744b688fc115f280 10,51,89-103,105,108-109,116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "84faa5edefaf292c0d542b7393ca0a91e295ed41",
+  "prompts": {
+    "744b688fc115f280": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e2ad7fcf-a277-491a-9237-f2b42081ac4d",
+        "model": "deepseek-flash"
+      },
+      "human_author": "nongjiawu",
+      "messages": [],
+      "total_additions": 2393,
+      "total_deletions": 0,
+      "accepted_lines": 3021,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "docs/img/constraints-tab.png": {
+          "additions": 1717,
+          "accepted_lines": 1717
+        },
+        "python/ponce4ghidra_engine/engine_triton.py": {
+          "accepted_lines": 565
+        },
+        "src/main/java/ponce4ghidra/engine/EngineManager.java": {
+          "accepted_lines": 24
+        },
+        "docs/index.html": {
+          "additions": 528,
+          "accepted_lines": 528
+        },
+        "docs/img/results-early.png": {
+          "additions": 148,
+          "accepted_lines": 148
+        },
+        "python/ponce4ghidra_engine/server.py": {
+          "accepted_lines": 39
+        }
+      }
+    }
+  }
+}
