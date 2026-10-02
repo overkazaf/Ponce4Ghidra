@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ponce4Ghidra — Ghidra 交互式符号执行插件</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root {
+  --bg: #0a0e14;
+  --bg-card: #12171f;
+  --bg-code: #0d1117;
+  --border: #1e2734;
+  --text: #e2e8f0;
+  --text-dim: #8892a4;
+  --accent: #00d4aa;
+  --accent-glow: rgba(0,212,170,0.15);
+  --amber: #f0a030;
+  --blue: #58a6ff;
+  --red: #f85149;
+  --purple: #bc8cff;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+.hero {
+  padding: 5rem 1.5rem 4rem;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,212,170,0.08) 0%, transparent 60%);
+}
+.hero h1 {
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin-bottom: 0.5rem;
+}
+.hero h1 span { color: var(--accent); }
+.hero .tagline {
+  font-size: 1.15rem;
+  color: var(--text-dim);
+  max-width: 600px;
+  margin: 0 auto 2rem;
+}
+.hero-badges {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 2.5rem;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+}
+.badge .dot { width: 8px; height: 8px; border-radius: 50%; }
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.8rem;
+  background: var(--accent);
+  color: var(--bg);
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: opacity 0.2s;
+}
+.hero-cta:hover { opacity: 0.85; }
+.container { max-width: 960px; margin: 0 auto; padding: 0 1.5rem; }
+section { padding: 4rem 0; }
+section h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 1.5rem;
+  text-wrap: balance;
+}
+section h2 span { color: var(--accent); }
+.demo-block {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem 2rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.88rem;
+  line-height: 1.8;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+.demo-block .step { color: var(--text-dim); }
+.demo-block .cmd { color: var(--accent); }
+.demo-block .result { color: var(--amber); font-weight: 600; }
+.screenshot {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin: 2rem 0;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.screenshot img { width: 100%; display: block; }
+.screenshot-caption {
+  padding: 0.6rem 1rem;
+  background: var(--bg-card);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+.arch-diagram {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 2rem;
+  margin: 2rem 0;
+  overflow-x: auto;
+}
+.arch-diagram svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+.feature {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.3rem 1.5rem;
+}
+.feature-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+.feature h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.3rem; }
+.feature p { color: var(--text-dim); font-size: 0.9rem; line-height: 1.5; }
+.workflow { display: flex; flex-direction: column; gap: 0; margin: 2rem 0; }
+.wf-step { display: flex; gap: 1.2rem; position: relative; padding-bottom: 1.5rem; }
+.wf-step:last-child { padding-bottom: 0; }
+.wf-line { position: relative; display: flex; flex-direction: column; align-items: center; width: 40px; flex-shrink: 0; }
+.wf-num {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--accent-glow); border: 2px solid var(--accent); color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.85rem; font-family: 'JetBrains Mono', monospace; z-index: 1;
+}
+.wf-line::after { content: ''; position: absolute; top: 36px; left: 50%; transform: translateX(-50%); width: 2px; bottom: 0; background: var(--border); }
+.wf-step:last-child .wf-line::after { display: none; }
+.wf-body { flex: 1; padding-top: 0.3rem; }
+.wf-body strong { color: var(--accent); }
+.wf-body code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--bg-code); padding: 0.15em 0.4em; border-radius: 4px; border: 1px solid var(--border); }
+.wf-body .dim { color: var(--text-dim); }
+.compare-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.compare-table th { text-align: left; padding: 0.7rem 1rem; border-bottom: 2px solid var(--border); color: var(--text-dim); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+.compare-table td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--border); }
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-table .method { color: var(--accent); font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+.paper { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.6rem; }
+.paper strong { display: block; margin-bottom: 0.2rem; }
+.paper span { color: var(--text-dim); font-size: 0.88rem; }
+.install-block { background: var(--bg-code); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.7; overflow-x: auto; margin: 1rem 0; }
+.install-block .comment { color: var(--text-dim); }
+.install-block .cmd { color: var(--accent); }
+footer { border-top: 1px solid var(--border); padding: 2rem 0; text-align: center; color: var(--text-dim); font-size: 0.88rem; }
+footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1><span>Ponce4Ghidra</span></h1>
+  <p class="tagline">Ghidra 交互式符号执行插件。右键选择地址，符号化输入，一键求解——密码、License Key、CTF Flag，通通搞定。</p>
+  <div class="hero-badges">
+    <span class="badge"><span class="dot" style="background:var(--accent)"></span> angr + Z3</span>
+    <span class="badge"><span class="dot" style="background:var(--blue)"></span> Ghidra 11.4+</span>
+    <span class="badge"><span class="dot" style="background:var(--amber)"></span> ELF / Mach-O / .so</span>
+    <span class="badge"><span class="dot" style="background:var(--purple)"></span> Veritesting + Unicorn</span>
+  </div>
+  <a href="https://github.com/overkazaf/Ponce4Ghidra" class="hero-cta">GitHub 仓库 &rarr;</a>
+  <p style="margin-top:1.2rem;color:var(--text-dim);font-size:0.9rem"><a href="index.html" style="color:var(--text-dim);text-decoration:none">English</a> &nbsp;|&nbsp; <a href="index_cn.html" style="color:var(--text);text-decoration:none;font-weight:600">中文</a></p>
+</div>
+
+<div class="container">
+
+<section>
+  <h2>5 步<span>破解密码</span></h2>
+  <div class="demo-block">
+    <div><span class="step">1.</span> 在 Ghidra 中打开 <span class="cmd">test_crackme</span></div>
+    <div><span class="step">2.</span> 右键 <span class="cmd">0x1000004d7</span> (return 1) &rarr; Set as Find Target</div>
+    <div><span class="step">3.</span> 右键 <span class="cmd">0x100000484</span> (return 0) &rarr; Set as Avoid</div>
+    <div><span class="step">4.</span> Ponce4Ghidra &rarr; Symbolize argv[1] (size: <span class="cmd">4</span>)</div>
+    <div><span class="step">5.</span> Solve Constraints &rarr; <span class="result">argv1 = P4Rg</span></div>
+  </div>
+
+  <div class="screenshot">
+    <img src="img/constraints-tab.png" alt="Ponce4Ghidra 约束面板" loading="lazy">
+    <div class="screenshot-caption">约束面板：Z3 的求解路径——每条约束对应密码 P4Rg 的一个字节</div>
+  </div>
+</section>
+
+<section>
+  <h2><span>工作原理</span></h2>
+  <p style="color:var(--text-dim);max-width:65ch;margin-bottom:1rem">不是暴力破解，不是 fuzzing——是<strong style="color:var(--text)">解方程</strong>。16 字节输入有 2<sup>128</sup> 种可能，约束条件将其化简为 Z3 秒级求解的方程组。</p>
+
+  <div class="arch-diagram">
+    <svg viewBox="0 0 780 240" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L10,5 L0,9" fill="none" stroke="#e2e8f0" stroke-width="1.5"/></marker>
+        <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L10,5 L0,9" fill="none" stroke="#00d4aa" stroke-width="1.5"/></marker>
+      </defs>
+      <rect x="10" y="80" width="100" height="80" rx="10" fill="#12171f" stroke="#1e2734" stroke-width="1.5"/>
+      <text x="60" y="112" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="10" font-weight="600" letter-spacing="0.05em">用户</text>
+      <text x="60" y="130" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="11">设置目标</text>
+      <text x="60" y="146" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="11">符号化输入</text>
+      <line x1="115" y1="120" x2="155" y2="120" stroke="#e2e8f0" stroke-width="1.5" marker-end="url(#a)"/>
+      <rect x="160" y="60" width="140" height="120" rx="10" fill="#12171f" stroke="#00d4aa" stroke-opacity="0.4" stroke-width="1.5"/>
+      <text x="230" y="85" text-anchor="middle" fill="#00d4aa" font-family="Inter,sans-serif" font-size="11" font-weight="700">Ghidra 插件</text>
+      <text x="230" y="105" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="10">Java</text>
+      <text x="230" y="125" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">4 标签页面板</text>
+      <text x="230" y="140" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">8 个菜单操作</text>
+      <text x="230" y="155" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">会话保存/恢复</text>
+      <line x1="305" y1="120" x2="355" y2="120" stroke="#e2e8f0" stroke-width="1.5" marker-end="url(#a)"/>
+      <text x="330" y="110" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono,monospace" font-size="9">JSON/TCP</text>
+      <text x="330" y="137" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono,monospace" font-size="9">:13370</text>
+      <rect x="360" y="40" width="160" height="160" rx="10" fill="#12171f" stroke="#f0a030" stroke-opacity="0.4" stroke-width="1.5"/>
+      <text x="440" y="65" text-anchor="middle" fill="#f0a030" font-family="Inter,sans-serif" font-size="11" font-weight="700">angr 引擎</text>
+      <text x="440" y="82" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="10">Python</text>
+      <text x="440" y="105" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">符号执行</text>
+      <text x="440" y="120" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">路径分叉</text>
+      <text x="440" y="135" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">约束收集</text>
+      <text x="440" y="155" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="9">+ Veritesting</text>
+      <text x="440" y="170" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="9">+ Unicorn (可选)</text>
+      <line x1="525" y1="120" x2="575" y2="120" stroke="#e2e8f0" stroke-width="1.5" marker-end="url(#a)"/>
+      <text x="550" y="110" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono,monospace" font-size="9">约束条件</text>
+      <rect x="580" y="70" width="120" height="100" rx="10" fill="#12171f" stroke="#58a6ff" stroke-opacity="0.4" stroke-width="1.5"/>
+      <text x="640" y="98" text-anchor="middle" fill="#58a6ff" font-family="Inter,sans-serif" font-size="11" font-weight="700">Z3 求解器</text>
+      <text x="640" y="118" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">SAT + 理论求解</text>
+      <text x="640" y="133" text-anchor="middle" fill="#e2e8f0" font-family="Inter,sans-serif" font-size="10">CDCL 引擎</text>
+      <text x="640" y="148" text-anchor="middle" fill="#8892a4" font-family="Inter,sans-serif" font-size="10">位向量、数组理论</text>
+      <line x1="640" y1="175" x2="640" y2="210" stroke="#00d4aa" stroke-width="2" marker-end="url(#ag)"/>
+      <rect x="580" y="210" width="120" height="30" rx="6" fill="#00d4aa" fill-opacity="0.12" stroke="#00d4aa" stroke-opacity="0.5"/>
+      <text x="640" y="230" text-anchor="middle" fill="#00d4aa" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700">P4Rg</text>
+    </svg>
+  </div>
+
+  <div class="workflow">
+    <div class="wf-step">
+      <div class="wf-line"><div class="wf-num">1</div></div>
+      <div class="wf-body"><strong>符号化</strong>——用数学变量替换具体输入<br><span class="dim">argv[1] 变成 4 字节未知量：<code>BVS("argv1", 32)</code></span></div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-line"><div class="wf-num">2</div></div>
+      <div class="wf-body"><strong>分叉</strong>——遇到依赖符号输入的分支，两边同时探索<br><span class="dim"><code>if (input[0] == 'P')</code> → 一条路径加约束 <code>byte0 == 0x50</code>，另一条加 <code>byte0 != 0x50</code></span></div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-line"><div class="wf-num">3</div></div>
+      <div class="wf-body"><strong>收集</strong>——每条路径沿途累积约束<br><span class="dim">到达目标的路径：<code>byte0==0x50 ∧ byte1==0x34 ∧ byte2^0x42==0x10 ∧ byte3+0x20==0x87</code></span></div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-line"><div class="wf-num">4</div></div>
+      <div class="wf-body"><strong>求解</strong>——把所有约束交给 Z3<br><span class="dim">Z3 的 CDCL 引擎毫秒级解出 → <code>P4Rg</code></span></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span>功能特性</span></h2>
+  <div class="features">
+    <div class="feature">
+      <div class="feature-icon" style="background:var(--accent-glow);color:var(--accent)">Σ</div>
+      <h3>多解求解器</h3>
+      <p>每个变量最多返回 5 个不同的解。密码可能有多个合法输入。</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:rgba(240,160,48,0.12);color:var(--amber)">C</div>
+      <h3>约束可视化</h3>
+      <p>查看求解器收集的每一条约束。理解路径为什么可达——不只是"可达"。</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:rgba(88,166,255,0.12);color:var(--blue)">V</div>
+      <h3>Veritesting</h3>
+      <p>循环边界智能路径合并。大型二进制不会路径爆炸。</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:rgba(188,140,255,0.12);color:var(--purple)">U</div>
+      <h3>Unicorn 引擎</h3>
+      <p>不涉及符号变量的代码块通过 Unicorn 快速具体执行，仅在符号分支处切回符号执行。</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:var(--accent-glow);color:var(--accent)">↻</div>
+      <h3>会话持久化</h3>
+      <p>跨 Ghidra 重启保存/恢复会话。Find/Avoid 目标和符号化命令不会丢失。</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:rgba(248,81,73,0.12);color:var(--red)">⚡</div>
+      <h3>实时进度</h3>
+      <p>探索过程中状态栏每秒更新：活跃路径数、已找到路径数、步数、耗时。</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>何时使用<span>哪种符号化方式</span></h2>
+  <div style="overflow-x:auto">
+  <table class="compare-table">
+    <tr><th>方式</th><th>适用场景</th><th>速度</th></tr>
+    <tr>
+      <td class="method">Function Argument</td>
+      <td>已知哪个函数负责校验输入。分析 .so 库。大型二进制。</td>
+      <td style="color:var(--accent)">快</td>
+    </tr>
+    <tr>
+      <td class="method">argv[N]</td>
+      <td>程序从命令行读取输入。小型/简单二进制。需要完整程序上下文。</td>
+      <td style="color:var(--amber)">中等</td>
+    </tr>
+    <tr>
+      <td class="method">Register</td>
+      <td>未知量是标量（int/long），不是缓冲区。</td>
+      <td style="color:var(--accent)">快</td>
+    </tr>
+    <tr>
+      <td class="method">Memory</td>
+      <td>未知量位于已知固定内存地址（全局变量、结构体字段）。</td>
+      <td style="color:var(--accent)">快</td>
+    </tr>
+  </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.9rem;margin-top:0.5rem"><strong style="color:var(--text)">经验法则</strong>：优先使用 Function Argument。只有需要完整程序执行上下文时才用 argv。</p>
+</section>
+
+<section>
+  <h2><span>平台支持</span></h2>
+  <div style="overflow-x:auto">
+  <table class="compare-table">
+    <tr><th>格式</th><th>架构</th><th>状态</th></tr>
+    <tr><td>Mach-O</td><td>x86_64</td><td style="color:var(--accent)">完整测试</td></tr>
+    <tr><td>ELF</td><td>x86_64, ARM64, ARM32, MIPS</td><td style="color:var(--accent)">已测试（静态链接）</td></tr>
+    <tr><td>Android .so</td><td>ARM64, ARM32</td><td style="color:var(--amber)">支持（延迟状态创建）</td></tr>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2><span>安装</span></h2>
+  <div class="install-block">
+<span class="comment"># 1. 创建 Python 虚拟环境</span>
+python3 -m venv .venv
+source .venv/bin/activate
+<span class="cmd">pip install angr</span>
+pip install unicorn  <span class="comment"># 可选：加速具体执行</span>
+
+<span class="comment"># 2. 构建 Ghidra 扩展</span>
+export GHIDRA_INSTALL_DIR=/path/to/ghidra
+<span class="cmd">gradle buildExtension</span>
+
+<span class="comment"># 3. 安装到 Ghidra</span>
+<span class="comment"># File → Install Extensions → Add → dist/*.zip</span>
+  </div>
+</section>
+
+<section>
+  <h2>核心<span>论文</span></h2>
+  <div class="paper"><strong>Z3: An Efficient SMT Solver</strong><span>de Moura, Bjørner (2008, TACAS) — Ponce4Ghidra 背后的求解引擎</span></div>
+  <div class="paper"><strong>angr: (State of) The Art of War</strong><span>Shoshitaishvili 等 (2016, IEEE S&P) — 符号执行框架</span></div>
+  <div class="paper"><strong>GRASP: Conflict-Driven Clause Learning</strong><span>Marques-Silva, Sakallah (1996, ICCAD) — 让 SAT 求解变得实用的算法</span></div>
+  <div class="paper"><strong>KLEE: Automatic Test Generation</strong><span>Cadar, Dunbar, Engler (2008, OSDI) — 源码级符号执行里程碑</span></div>
+</section>
+
+</div>
+
+<footer>
+  <div class="container">
+    <p><strong>Ponce4Ghidra</strong> — MIT License</p>
+    <p style="margin-top:0.3rem"><a href="https://github.com/overkazaf/Ponce4Ghidra">GitHub</a></p>
+  </div>
+</footer>
+
+</body>
+</html>
