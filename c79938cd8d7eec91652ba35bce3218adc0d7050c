@@ -1,0 +1,36 @@
+docs/index_cn.html
+  744b688fc115f280 282-466
+docs/index.html
+  744b688fc115f280 755-784,788
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "c79938cd8d7eec91652ba35bce3218adc0d7050c",
+  "prompts": {
+    "744b688fc115f280": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e2ad7fcf-a277-491a-9237-f2b42081ac4d",
+        "model": "deepseek-flash"
+      },
+      "human_author": "nongjiawu",
+      "messages": [],
+      "total_additions": 216,
+      "total_deletions": 1,
+      "accepted_lines": 216,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "docs/index_cn.html": {
+          "additions": 185,
+          "accepted_lines": 185
+        },
+        "docs/index.html": {
+          "additions": 31,
+          "deletions": 1,
+          "accepted_lines": 31
+        }
+      }
+    }
+  }
+}
