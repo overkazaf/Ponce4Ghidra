@@ -1,0 +1,30 @@
+python/ponce4ghidra_engine/engine_triton.py
+  744b688fc115f280 129,131,133,148-149,151,153,155-156,158-159,161,163-164,170
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "918fd36bb0b133c91efc405ec3292e3d7a96acd3",
+  "prompts": {
+    "744b688fc115f280": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e2ad7fcf-a277-491a-9237-f2b42081ac4d",
+        "model": "deepseek-flash"
+      },
+      "human_author": "nongjiawu",
+      "messages": [],
+      "total_additions": 15,
+      "total_deletions": 11,
+      "accepted_lines": 15,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "python/ponce4ghidra_engine/engine_triton.py": {
+          "additions": 15,
+          "deletions": 11,
+          "accepted_lines": 15
+        }
+      }
+    }
+  }
+}
