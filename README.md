@@ -1,3 +1,5 @@
+[English](README.md) | [中文](README_CN.md)
+
 # Ponce4Ghidra
 
 Interactive symbolic execution plugin for Ghidra, powered by [angr](https://angr.io) + [Z3](https://github.com/Z3Prover/z3).
@@ -22,6 +24,12 @@ Right-click an address, symbolize the input, click Solve — the plugin finds co
 ![Constraints Tab](docs/img/constraints-tab.png)
 
 Each constraint maps to a byte of the password: `byte0 == 80 ('P')`, `byte1 == 52 ('4')`, `byte2 ^ 0x42 == 0x10 ('R')`, `byte3 + 0x20 == 0x87 ('g')`.
+
+### Results Tab — 5 solutions for a 19-byte license key (ELF binary)
+
+![Results Tab](docs/img/results-table.png)
+
+Multi-solution enumeration on `test_license_elf`: the solver found 5 valid license keys, all variants of `K9mZ-4wR2-Xp7B-3nLf` differing in the last byte.
 
 ## Features
 
