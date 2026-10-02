@@ -752,10 +752,40 @@ footer a { color: var(--accent); text-decoration: none; }
   </table>
   </div>
 
+  <!-- Benchmark -->
+  <h3 style="color:var(--accent);font-size:1.1rem;margin:2rem 0 1rem">Real Benchmark: angr vs Triton</h3>
+  <p style="color:var(--dim);margin-bottom:0.8rem;font-size:0.9rem">Both engines solving the same binaries on the same machine, via <code>symbolize_function_argument</code>:</p>
+  <div style="overflow-x:auto">
+  <table class="compare-table">
+    <tr><th>Binary</th><th>Input size</th><th style="color:var(--accent)">angr</th><th style="color:#8250df">Triton</th><th>Winner</th></tr>
+    <tr>
+      <td><code>test_crackme</code><br><span style="color:var(--dim);font-size:0.8rem">4 byte-compares, no libc</span></td>
+      <td>4 bytes</td>
+      <td>0.18s ✓</td>
+      <td style="font-weight:600">0.065s ✓</td>
+      <td style="color:#8250df;font-weight:600">Triton 2.8×</td>
+    </tr>
+    <tr>
+      <td><code>test_license</code><br><span style="color:var(--dim);font-size:0.8rem">19-byte key with strlen, XOR, checksum</span></td>
+      <td>19 bytes</td>
+      <td style="font-weight:600">3.65s ✓</td>
+      <td>timeout ✗</td>
+      <td style="color:var(--accent);font-weight:600">angr</td>
+    </tr>
+  </table>
+  </div>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1rem 1.3rem;margin:1rem 0">
+    <p style="margin:0;font-size:0.9rem"><strong>Why the difference?</strong></p>
+    <p style="margin:0.4rem 0 0;color:var(--dim);font-size:0.88rem"><strong style="color:#8250df">Triton wins</strong> on pure computation — no path forking overhead, direct instruction-to-AST translation. For <code>check_password</code> (4 simple byte compares), it's 3× faster.</p>
+    <p style="margin:0.4rem 0 0;color:var(--dim);font-size:0.88rem"><strong style="color:var(--accent)">angr wins</strong> on functions that call libc (<code>strlen</code>, <code>printf</code>) — angr auto-hooks them with SimProcedures, while Triton tries to execute the real instructions (and the Mach-O libc stubs aren't loaded). For complex real-world functions, angr's SimOS layer is the deciding factor.</p>
+    <p style="margin:0.6rem 0 0;font-size:0.88rem"><strong>Rule of thumb:</strong> Use <span style="color:var(--accent);font-weight:600">angr</span> by default. Switch to <span style="color:#8250df;font-weight:600">Triton</span> when angr path-explodes on a large function, or when you have a Frida trace to replay.</p>
+  </div>
+
   <!-- DRM workflow teaser -->
   <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.3rem 1.6rem;margin:1.5rem 0">
     <p style="margin:0;font-weight:600;font-size:0.95rem">The DRM Reverse Engineering Workflow</p>
-    <p style="margin:0.5rem 0 0;color:var(--text-dim);font-size:0.9rem">
+    <p style="margin:0.5rem 0 0;color:var(--dim);font-size:0.9rem">
       <span style="color:#e8590c;font-weight:600">Frida</span> captures runtime data (keys, I/O samples) →
       <span style="color:var(--accent);font-weight:600">Ponce4Ghidra</span> analyzes the algorithm (angr for small funcs, Triton for large) →
       <span style="color:var(--blue);font-weight:600">unidbg</span> reproduces it as a standalone service.
