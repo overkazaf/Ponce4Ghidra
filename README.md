@@ -4,6 +4,8 @@ Interactive symbolic execution plugin for Ghidra, powered by [angr](https://angr
 
 Right-click an address, symbolize the input, click Solve — the plugin finds concrete values that make the program reach your target. Passwords, license keys, flag checkers, crypto parameters — if it's a constraint satisfaction problem, Ponce4Ghidra solves it.
 
+**[Project Page](https://overkazaf.github.io/Ponce4Ghidra/)** — architecture diagrams, workflow guide, and SAT/SMT primer.
+
 ## Quick Demo
 
 ```
@@ -14,6 +16,12 @@ Right-click an address, symbolize the input, click Solve — the plugin finds co
 5. Ponce4Ghidra → Solve Constraints
    → Solved: argv1 = P4Rg
 ```
+
+### Constraints Tab — see how the solver derived the password
+
+![Constraints Tab](docs/img/constraints-tab.png)
+
+Each constraint maps to a byte of the password: `byte0 == 80 ('P')`, `byte1 == 52 ('4')`, `byte2 ^ 0x42 == 0x10 ('R')`, `byte3 + 0x20 == 0x87 ('g')`.
 
 ## Features
 
@@ -41,6 +49,19 @@ Right-click an address, symbolize the input, click Solve — the plugin finds co
 - Session persistence — Save/Restore across Ghidra restarts
 - Pre-solve validation ("Nothing is symbolized" caught before explore)
 - Stale engine detection (refuses to wipe variables against a mismatched engine)
+
+## How It Works
+
+```mermaid
+flowchart LR
+    A["🎯 Set Find/Avoid"] --> B["📝 Symbolize Input"]
+    B --> C["🔀 angr: Fork at Branches"]
+    C --> D["📋 Collect Constraints"]
+    D --> E["🧮 Z3: Solve Equations"]
+    E --> F["✅ P4Rg"]
+```
+
+> **Not brute force** — a 16-byte input has 2¹²⁸ possibilities. The constraints reduce it to a system Z3 solves in seconds.
 
 ## Architecture
 
