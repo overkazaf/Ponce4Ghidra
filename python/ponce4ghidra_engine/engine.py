@@ -435,7 +435,8 @@ class SymbolicEngine:
 
     def explore(self, timeout_sec: int = 60, progress_callback=None,
                 use_veritesting: bool = False,
-                use_unicorn: bool = False) -> dict:
+                use_unicorn: bool = False,
+                **_kwargs) -> dict:
         project = self._require_project()
         state = self._require_state()
 

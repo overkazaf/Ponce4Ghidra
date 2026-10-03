@@ -324,19 +324,35 @@ class TritonEngine:
         logger.info("Triton: avoid addresses set: %s", [hex(a) for a in addresses])
         return {"avoid_count": len(self.avoid_addrs)}
 
+    STRATEGIES = ("dfs", "bfs", "random", "nearest")
+
     def explore(self, timeout_sec: int = 60, progress_callback=None,
-                use_veritesting: bool = False, use_unicorn: bool = False) -> dict:
+                use_veritesting: bool = False, use_unicorn: bool = False,
+                strategy: str = "dfs", max_attempts: int = 64) -> dict:
         """Concolic exploration: execute concretely, negate branches to find paths.
 
-        Strategy: run the function with concrete input, collecting branch
-        constraints. When the path misses the target, negate one branch at a
-        time to steer toward Find addresses. Each attempt creates a fresh
-        TritonContext (Triton accumulates state that cannot be cleanly reset).
+        Each attempt creates a fresh TritonContext (Triton accumulates state
+        that cannot be cleanly reset), runs with concrete input values, and
+        collects not-taken branch constraints. When the path misses the target,
+        the next model is picked according to ``strategy``:
+
+        - **dfs** (default): pop the last collected model (depth-first,
+          favours branches near the end of execution — closest to the target)
+        - **bfs**: pop the first collected model (breadth-first, explores
+          shallower branches before deeper ones)
+        - **random**: pop a random model (increases diversity, non-deterministic)
+        - **nearest**: sort by PC distance to the closest Find address, pop
+          the nearest (requires recording the branch PC with each model)
         """
         if self.ctx is None:
             raise ValueError("Engine is not initialized: no binary is loaded.")
         if not self.find_addrs:
             raise ValueError("No find addresses set. Call set_find first.")
+        if strategy not in self.STRATEGIES:
+            raise ValueError(
+                f"Unknown strategy: {strategy!r}. "
+                f"Choose from: {', '.join(self.STRATEGIES)}"
+            )
 
         start = self._start_addr or self._entry_point
         ret_addr = 0xdeadbeef
@@ -345,8 +361,9 @@ class TritonEngine:
         avoided_count = 0
         errored_count = 0
         total_steps = 0
-        max_attempts = 64
+        max_attempts = max(1, min(max_attempts, 4096))
         max_instructions = 500_000
+        logger.info("Triton: strategy=%s, max_attempts=%d", strategy, max_attempts)
         deadline = time.monotonic() + timeout_sec
         t0 = time.monotonic()
         last_report = time.monotonic()
@@ -451,7 +468,7 @@ class TritonEngine:
                             if not branch["isTaken"]:
                                 model = ctx.getModel(branch["constraint"])
                                 if model:
-                                    pending_models.append(model)
+                                    pending_models.append((pc, model))
 
                 now = time.monotonic()
                 if progress_callback and now - last_report >= 1.0:
@@ -471,7 +488,7 @@ class TritonEngine:
             if not pending_models:
                 break
 
-            model = pending_models.pop()
+            branch_pc, model = self._pick_model(pending_models, strategy)
             for sym_id, sym_model in model.items():
                 var = ctx.getSymbolicVariable(sym_id)
                 origin = var.getOrigin()
@@ -482,8 +499,8 @@ class TritonEngine:
                         if 0 <= idx < sz:
                             concrete_bufs[vn][idx] = sym_model.getValue()
 
-            logger.info("Triton: attempt %d, trying alternative (%d pending)",
-                        attempt + 1, len(pending_models))
+            logger.info("Triton: attempt %d, strategy=%s, negating branch at %#x (%d pending)",
+                        attempt + 1, strategy, branch_pc, len(pending_models))
 
         return {
             "found_count": found_count,
@@ -493,7 +510,29 @@ class TritonEngine:
             "errored_count": errored_count,
             "error_samples": [],
             "explored_count": found_count,
+            "strategy": strategy,
+            "attempts_used": attempt + 1,
         }
+
+    def _pick_model(self, pending: list, strategy: str) -> tuple:
+        """Select the next model to try according to the exploration strategy.
+
+        Each entry in ``pending`` is a ``(branch_pc, model)`` tuple.
+        """
+        import random as _random
+
+        if strategy == "bfs":
+            return pending.pop(0)
+        if strategy == "random":
+            return pending.pop(_random.randrange(len(pending)))
+        if strategy == "nearest":
+            pending.sort(
+                key=lambda entry: min(abs(entry[0] - f) for f in self.find_addrs),
+                reverse=True,
+            )
+            return pending.pop()
+        # dfs (default): last-in first-out
+        return pending.pop()
 
     def _capture_state(self) -> dict:
         """Snapshot the current context for later solving."""
@@ -571,6 +610,7 @@ class TritonEngine:
                 "veritesting": False,
                 "unicorn": False,
                 "triton": True,
+                "strategies": list(self.STRATEGIES),
             },
             "command_log": self.command_log,
         }

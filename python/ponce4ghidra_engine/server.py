@@ -64,12 +64,17 @@ def handle_client(conn: socket.socket, engine):
                         def cb(data):
                             writer.write(progress(data).to_json() + "\n")
                             writer.flush()
-                    result = engine.explore(
-                        cmd.params.get("timeout_sec", 60),
+                    kwargs = dict(
+                        timeout_sec=cmd.params.get("timeout_sec", 60),
                         progress_callback=cb,
                         use_veritesting=cmd.params.get("veritesting", False),
                         use_unicorn=cmd.params.get("unicorn", False),
                     )
+                    if "strategy" in cmd.params:
+                        kwargs["strategy"] = cmd.params["strategy"]
+                    if "max_attempts" in cmd.params:
+                        kwargs["max_attempts"] = cmd.params["max_attempts"]
+                    result = engine.explore(**kwargs)
                     resp = ok(result)
                 else:
                     handler = HANDLERS.get(cmd.type)
