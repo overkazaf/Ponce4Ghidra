@@ -186,6 +186,11 @@ public class EngineProtocol {
 	}
 
 	public static Command exploreCmdWithProgress(int timeoutSec, boolean veritesting, boolean unicorn) {
+		return exploreCmdWithProgress(timeoutSec, veritesting, unicorn, null, 0);
+	}
+
+	public static Command exploreCmdWithProgress(int timeoutSec, boolean veritesting, boolean unicorn,
+			String strategy, int maxAttempts) {
 		Map<String, Object> params = new HashMap<>();
 		params.put("timeout_sec", timeoutSec);
 		params.put("report_progress", true);
@@ -194,6 +199,12 @@ public class EngineProtocol {
 		}
 		if (unicorn) {
 			params.put("unicorn", true);
+		}
+		if (strategy != null && !strategy.isBlank()) {
+			params.put("strategy", strategy);
+		}
+		if (maxAttempts > 0) {
+			params.put("max_attempts", maxAttempts);
 		}
 		return new Command("explore", params);
 	}

@@ -28,7 +28,12 @@ public class SolveAction extends DockingAction {
 
 	private static final int DEFAULT_TIMEOUT = 60;
 	private static final int MAX_SOLUTIONS = 5;
+	private static final String[] STRATEGIES = { "dfs", "bfs", "random", "nearest" };
+	private static final int DEFAULT_MAX_ATTEMPTS = 64;
 	private final Ponce4GhidraPlugin plugin;
+
+	private String currentStrategy = "dfs";
+	private int currentMaxAttempts = DEFAULT_MAX_ATTEMPTS;
 
 	public SolveAction(Ponce4GhidraPlugin plugin) {
 		super("Solve Constraints", plugin.getName());
@@ -63,10 +68,27 @@ public class SolveAction extends DockingAction {
 			return;
 		}
 
-		plugin.getStateProvider().setStatus("Exploring paths...");
+		boolean isTriton = isTritonEngine();
+		String strategy = null;
+		int maxAttempts = 0;
+
+		if (isTriton) {
+			strategy = promptStrategy();
+			if (strategy == null) {
+				return;
+			}
+			maxAttempts = promptMaxAttempts();
+			if (maxAttempts < 0) {
+				return;
+			}
+		}
+
+		plugin.getStateProvider().setStatus("Exploring paths..." +
+			(isTriton ? " (strategy=" + strategy + ", max_attempts=" + maxAttempts + ")" : ""));
 
 		plugin.getEngineManager().sendCommandWithProgressAsync(
-			EngineProtocol.exploreCmdWithProgress(DEFAULT_TIMEOUT, true, true),
+			EngineProtocol.exploreCmdWithProgress(DEFAULT_TIMEOUT, !isTriton, !isTriton,
+				strategy, maxAttempts),
 			progress -> SwingUtilities.invokeLater(() -> {
 				JsonObject d = progress.getData();
 				if (d != null) {
@@ -341,5 +363,63 @@ public class SolveAction extends DockingAction {
 		}
 		return "Solved " + varCount + " variable"
 			+ (varCount == 1 ? "" : "s");
+	}
+
+	private boolean isTritonEngine() {
+		try {
+			Response state = plugin.getEngineManager().getState();
+			if (state.isOk() && state.getData() != null) {
+				JsonObject caps = state.getData().getAsJsonObject("capabilities");
+				if (caps != null && caps.has("triton")) {
+					return caps.get("triton").getAsBoolean();
+				}
+			}
+		}
+		catch (IOException e) {
+			// Fall through — assume angr
+		}
+		return false;
+	}
+
+	private String promptStrategy() {
+		Object choice = JOptionPane.showInputDialog(null,
+			"Triton concolic exploration strategy:\n\n" +
+			"  dfs — depth-first: negate the last branch (default, fast for linear checks)\n" +
+			"  bfs — breadth-first: negate the first branch (for wide branch trees)\n" +
+			"  random — random branch (for unknown structures)\n" +
+			"  nearest — closest to Find address (for large functions)\n",
+			"Ponce4Ghidra — Triton Strategy",
+			JOptionPane.QUESTION_MESSAGE, null,
+			STRATEGIES, currentStrategy);
+		if (choice == null) {
+			plugin.getStateProvider().setStatus("Cancelled");
+			return null;
+		}
+		currentStrategy = (String) choice;
+		return currentStrategy;
+	}
+
+	private int promptMaxAttempts() {
+		String answer = Prompts.ask(plugin, "Ponce4Ghidra — Max Attempts",
+			"Maximum number of concolic attempts (1-4096):",
+			String.valueOf(currentMaxAttempts));
+		if (answer == null) {
+			return -1;
+		}
+		try {
+			int val = Integer.parseInt(answer);
+			if (val < 1 || val > 4096) {
+				Msg.showError(this, null, "Ponce4Ghidra",
+					"max_attempts must be between 1 and 4096, got " + val);
+				return -1;
+			}
+			currentMaxAttempts = val;
+			return val;
+		}
+		catch (NumberFormatException e) {
+			Msg.showError(this, null, "Ponce4Ghidra",
+				"\"" + answer + "\" is not a number.");
+			return -1;
+		}
 	}
 }
