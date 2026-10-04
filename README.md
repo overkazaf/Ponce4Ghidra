@@ -1,3 +1,12 @@
+<div align="center">
+
+![Stars](https://img.shields.io/github/stars/overkazaf/Ponce4Ghidra?style=flat-square&color=58a6ff)
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)
+![Ghidra](https://img.shields.io/badge/Ghidra-Plugin-bf360c?style=flat-square)
+![Last Commit](https://img.shields.io/github/last-commit/overkazaf/Ponce4Ghidra?style=flat-square&color=58a6ff)
+
+</div>
+
 [English](README.md) | [中文](README_CN.md)
 
 # Ponce4Ghidra
